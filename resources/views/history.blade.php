@@ -86,8 +86,11 @@
 </head>
 <body class="bg-background text-on-background min-h-screen">
 
-<header class="fixed top-0 w-full z-50 border-b border-pink-100 bg-white/80 backdrop-blur-md shadow-[0_4px_16px_rgba(224,64,160,0.15)] flex justify-between items-center px-6 h-16">
-    <div class="text-2xl font-black tracking-tight text-pink-600">AKEIRA'S SNACK INN</div>
+<header class="fixed top-0 w-full z-50 border-b border-pink-100 bg-white/80 backdrop-blur-md shadow-[0_4px_16px_rgba(224,64,160,0.15)] flex justify-between items-center gap-2 px-4 sm:px-6 h-16">
+    <div class="grid grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1">
+        @include('partials.mobile-nav-menu-button')
+        <div class="text-xl sm:text-2xl font-black tracking-tight text-pink-600 truncate min-w-0">AKEIRA'S SNACK INN</div>
+    </div>
     <div class="flex items-center gap-4">
         <form method="GET" action="{{ route('history.index') }}" class="hidden md:flex relative">
             @if(request('date'))
@@ -109,7 +112,7 @@
     </div>
 </header>
 
-<aside class="h-screen w-64 fixed left-0 top-0 pt-20 border-r border-pink-100 bg-pink-50/50 flex flex-col gap-2 z-40 hidden lg:flex">
+<aside class="h-screen w-64 fixed left-0 top-0 pt-20 border-r border-pink-100 bg-pink-50/50 flex flex-col gap-2 z-40 hidden xl:flex">
     <div class="px-6 mb-6">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
@@ -149,7 +152,7 @@
     </nav>
 </aside>
 
-<main class="pt-20 min-h-screen pb-24 py-6 pl-5 pr-5 sm:pl-6 sm:pr-6 lg:pl-[calc(16rem+1.5rem)] lg:pr-8 xl:pr-[calc(20rem+1.5rem)]">
+<main class="pt-20 min-h-screen pb-6 py-6 pl-5 pr-5 sm:pl-6 sm:pr-6 xl:pl-[calc(16rem+1.5rem)] xl:pr-8 xl:pr-[calc(20rem+1.5rem)]">
     <div class="w-full max-w-none">
 
         @include('partials.flash-status')
@@ -396,26 +399,6 @@
     </div>
 </aside>
 
-{{-- ─── Mobile Bottom Nav ────────────────────────────────────────── --}}
-<nav class="md:hidden fixed bottom-0 w-full bg-white/90 backdrop-blur-lg border-t border-pink-100 px-6 py-3 flex justify-around items-center z-50">
-    <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 text-zinc-400">
-        <span class="material-symbols-outlined">dashboard</span>
-        <span class="text-[10px] font-bold">Home</span>
-    </a>
-    <a href="{{ route('products.index') }}" class="flex flex-col items-center gap-1 text-zinc-400">
-        <span class="material-symbols-outlined">inventory_2</span>
-        <span class="text-[10px] font-bold">Products</span>
-    </a>
-    <a href="{{ route('history.index') }}" class="flex flex-col items-center gap-1 text-pink-600">
-        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">history</span>
-        <span class="text-[10px] font-bold">History</span>
-    </a>
-    <a href="{{ route('reports.index') }}" class="flex flex-col items-center gap-1 text-zinc-400">
-        <span class="material-symbols-outlined">analytics</span>
-        <span class="text-[10px] font-bold">Reports</span>
-    </a>
-</nav>
-
 <script>
     function toggleOrderDetails(id, button) {
         const panel = document.getElementById(id);
@@ -437,6 +420,7 @@
     }
 </script>
 
+@include('partials.mobile-nav-drawer')
 @include('partials.logout-modal')
 
 </body>

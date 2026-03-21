@@ -54,6 +54,10 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## HTTPS (Railway / reverse proxy)
+
+If Chrome warns that a form is “not secure” (e.g. logout), set **`APP_URL`** in Railway Variables to your **https** public URL (e.g. `https://your-app.up.railway.app`). This app trusts proxy headers and forces HTTPS URLs in production so forms and redirects use TLS.
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
