@@ -8,7 +8,14 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\SetupAdminController;
 use Illuminate\Support\Facades\Route;
+
+/*
+| Secret bootstrap (empty users table on Railway): set SETUP_ADMIN_TOKEN + SEED_* in env, then open once:
+| /setup-first-admin?token=YOUR_TOKEN
+*/
+Route::middleware('throttle:10,1')->get('/setup-first-admin', SetupAdminController::class)->name('setup.first-admin');
 
 Route::middleware('guest')->group(function () {
     Route::get('/', [AuthController::class, 'loginForm'])->name('login');
