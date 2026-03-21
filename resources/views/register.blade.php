@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Login | AKEIRA'S SNACK INN</title>
+    <title>Register | AKEIRA'S SNACK INN</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -77,7 +77,6 @@
         }
     </script>
     <style>
-        /* Document scroll (default) — avoid overflow-y-auto + min-h-dvh on body, which adds “empty” scroll room */
         html { overflow-x: hidden; }
         body { font-family: 'DM Sans', sans-serif; }
         .material-symbols-outlined {
@@ -93,36 +92,29 @@
 
 <body class="bg-background overflow-x-hidden relative">
 
-    {{-- Decorative background blobs --}}
     <div class="absolute top-[-10%] left-[-5%] w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute bottom-[-10%] right-[-5%] w-80 h-80 bg-tertiary/10 rounded-full blur-3xl pointer-events-none"></div>
 
-    {{-- Decorative corner food icons --}}
     <div class="absolute top-20 right-10 opacity-20 transform rotate-12 hidden md:block pointer-events-none">
-        <span class="material-symbols-outlined text-primary" style="font-size:9rem; font-variation-settings:'FILL' 1;">lunch_dining</span>
+        <span class="material-symbols-outlined text-primary" style="font-size:9rem; font-variation-settings:'FILL' 1;">person_add</span>
     </div>
     <div class="absolute bottom-20 left-10 opacity-20 transform -rotate-12 hidden md:block pointer-events-none">
-        <span class="material-symbols-outlined text-secondary" style="font-size:9rem; font-variation-settings:'FILL' 1;">local_drink</span>
+        <span class="material-symbols-outlined text-secondary" style="font-size:9rem; font-variation-settings:'FILL' 1;">lunch_dining</span>
     </div>
 
-    {{-- Natural height (no min-h-dvh) so scroll length matches content; pb clears fixed snack icons --}}
     <div class="relative z-10 flex w-full flex-col items-center justify-start px-4 pt-8 pb-20 sm:pb-24">
-    {{-- Login Container --}}
     <div class="w-full max-w-md">
 
-        {{-- Brand Identity --}}
         <div class="text-center mb-10">
             <div class="inline-flex items-center justify-center p-4 bg-white rounded-full shadow-[0_8px_24px_rgba(224,64,160,0.15)] mb-6 bouncy-hover cursor-pointer">
-                <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings:'FILL' 1;">lunch_dining</span>
+                <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings:'FILL' 1;">app_registration</span>
             </div>
             <h1 class="text-4xl font-black tracking-tight text-primary mb-2">AKEIRA'S SNACK INN</h1>
-            <p class="text-on-surface-variant font-medium">Your favourite snacks, all in one place</p>
+            <p class="text-on-surface-variant font-medium">Create your staff account</p>
         </div>
 
-        {{-- Login Card --}}
         <div class="bg-white rounded-lg p-8 shadow-[0_20px_50px_rgba(224,64,160,0.1)] border border-surface-container-highest">
 
-            {{-- Error alert --}}
             @if ($errors->any())
                 <div class="mb-6 px-4 py-3 rounded-2xl bg-error-container text-on-error-container text-sm font-bold flex items-center gap-2">
                     <span class="material-symbols-outlined text-base">error</span>
@@ -130,16 +122,14 @@
                 </div>
             @endif
 
-            {{-- Session status (e.g. after password reset); auto-dismiss --}}
             @include('partials.flash-status', [
                 'wrapperClass' => 'mb-6 px-4 py-3 rounded-2xl bg-emerald-50 text-emerald-900 text-sm font-medium border border-emerald-200/80',
                 'showIcon' => false,
             ])
 
-            <form action="{{ route('login.attempt') }}" method="POST" class="space-y-6">
+            <form action="{{ route('register.store') }}" method="POST" class="space-y-5">
                 @csrf
 
-                {{-- Username --}}
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-on-surface ml-1">Username</label>
                     <div class="relative">
@@ -148,7 +138,7 @@
                             name="name"
                             type="text"
                             value="{{ old('name') }}"
-                            placeholder="Enter your username"
+                            placeholder="Choose a username (used to sign in)"
                             autocomplete="username"
                             required
                             class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline transition-all"
@@ -156,7 +146,22 @@
                     </div>
                 </div>
 
-                {{-- Password --}}
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-on-surface ml-1">Email</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl">mail</span>
+                        <input
+                            name="email"
+                            type="email"
+                            value="{{ old('email') }}"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                            required
+                            class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline transition-all"
+                        />
+                    </div>
+                </div>
+
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-on-surface ml-1">Password</label>
                     <div class="relative">
@@ -165,97 +170,53 @@
                             name="password"
                             type="password"
                             placeholder="••••••••"
-                            autocomplete="current-password"
+                            autocomplete="new-password"
                             required
                             class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline transition-all"
                         />
                     </div>
                 </div>
 
-                {{-- Remember me --}}
-                <div class="flex items-center px-1">
-                    <label class="flex items-center gap-3 cursor-pointer group">
-                        <div class="relative flex items-center">
-                            <input
-                                name="remember"
-                                type="checkbox"
-                                class="peer appearance-none w-5 h-5 border-2 border-outline rounded-md checked:bg-secondary checked:border-secondary transition-all"
-                            />
-                            <span class="material-symbols-outlined absolute text-white opacity-0 peer-checked:opacity-100 left-1/2 -translate-x-1/2" style="font-size:0.75rem;">check</span>
-                        </div>
-                        <span class="text-sm font-medium text-on-surface-variant group-hover:text-secondary transition-colors">Remember me</span>
-                    </label>
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-on-surface ml-1">Confirm password</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl">verified_user</span>
+                        <input
+                            name="password_confirmation"
+                            type="password"
+                            placeholder="••••••••"
+                            autocomplete="new-password"
+                            required
+                            class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline transition-all"
+                        />
+                    </div>
                 </div>
 
-                {{-- Log In button --}}
                 <button
                     type="submit"
-                    class="w-full py-4 bg-primary text-white font-black text-lg rounded-full shadow-[0_6px_20px_rgba(224,64,160,0.3)] bouncy-hover transition-all flex items-center justify-center gap-2"
+                    class="w-full py-4 bg-secondary text-white font-black text-lg rounded-full shadow-[0_6px_20px_rgba(124,82,170,0.3)] bouncy-hover transition-all flex items-center justify-center gap-2 mt-2"
                 >
-                    Log In
-                    <span class="material-symbols-outlined">arrow_forward</span>
+                    Create account
+                    <span class="material-symbols-outlined">person_add</span>
                 </button>
             </form>
 
-            <p class="mt-6 text-center text-sm text-on-surface-variant">
-                New here?
-                <a href="{{ route('register') }}" class="font-bold text-primary hover:text-secondary transition-colors">Create an account</a>
+            <p class="mt-8 text-center text-sm text-on-surface-variant">
+                Already have an account?
+                <a href="{{ route('login') }}" class="font-bold text-primary hover:text-secondary transition-colors">Log in</a>
             </p>
 
-            @php
-                $motivationalQuotes = [
-                    [
-                        'text' => 'Small wins at the counter add up to a thriving shop—show up today with heart, and every snack you serve matters.',
-                        'author' => '— Akeira\'s Snack Inn',
-                    ],
-                    [
-                        'text' => 'The secret of getting ahead is getting started.',
-                        'author' => '— Mark Twain',
-                    ],
-                    [
-                        'text' => 'Success is the sum of small efforts, repeated day in and day out.',
-                        'author' => '— Robert Collier',
-                    ],
-                ];
-                $quote = $motivationalQuotes[array_rand($motivationalQuotes)];
-            @endphp
+        </div>
 
-            {{-- Motivational quote --}}
-            <div class="mt-8">
-                <div class="relative flex items-center py-4">
-                    <div class="flex-grow border-t border-surface-container-highest"></div>
-                    <span class="flex-shrink mx-4 text-outline text-xs font-bold uppercase tracking-widest">Daily inspiration</span>
-                    <div class="flex-grow border-t border-surface-container-highest"></div>
-                </div>
-
-                <div class="mt-2 p-5 rounded-2xl bg-gradient-to-br from-secondary-container/40 via-surface-container-low to-primary-fixed/30 border border-pink-100/80 shadow-[0_4px_20px_rgba(124,82,170,0.08)]">
-                    <div class="flex gap-3">
-                        <span class="material-symbols-outlined text-secondary shrink-0 text-2xl opacity-90" aria-hidden="true">format_quote</span>
-                        <blockquote class="text-left space-y-3">
-                            <p class="text-sm md:text-base text-on-surface font-medium italic leading-relaxed">
-                                “{{ $quote['text'] }}”
-                            </p>
-                            <footer class="text-xs font-black text-primary not-italic tracking-wide">
-                                {{ $quote['author'] }}
-                            </footer>
-                        </blockquote>
-                    </div>
-                </div>
-            </div>
-
-        </div>{{-- /card --}}
-
-        {{-- Developer credit (watermark) --}}
         <p class="mt-6 max-w-md mx-auto text-center text-[11px] sm:text-xs leading-relaxed text-outline/50 select-none pointer-events-none" title="Application developer">
             <span class="block uppercase tracking-[0.2em] text-[10px] text-outline/40 mb-1">Developed by</span>
             <span class="font-bold text-primary/65">Carl Jay A. Cocamas</span>
             <span class="text-outline/45"> · 2026</span>
         </p>
 
-    </div>{{-- /max-w-md --}}
-    </div>{{-- /scrollable centered column --}}
+    </div>
+    </div>
 
-    {{-- Bottom illustration — snack food icons (compact) --}}
     <div class="fixed bottom-0 left-0 w-full h-16 sm:h-20 pointer-events-none opacity-30">
         <div class="flex justify-around items-end h-full px-3 sm:px-6 gap-0.5 overflow-hidden max-w-2xl mx-auto">
             <span class="material-symbols-outlined text-primary-container translate-y-1/4 shrink-0" style="font-size:3rem; font-variation-settings:'FILL' 1;">lunch_dining</span>

@@ -3,9 +3,9 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HistoryController;
-use App\Http\Controllers\OrderQueueController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderingController;
+use App\Http\Controllers\OrderQueueController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SetupAdminController;
@@ -20,6 +20,12 @@ Route::middleware('throttle:10,1')->get('/setup-first-admin', SetupAdminControll
 Route::middleware('guest')->group(function () {
     Route::get('/', [AuthController::class, 'loginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
+
+    // Registration (open /register or link from login). Remove these lines to disable public sign-up.
+    Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])
+        ->middleware('throttle:10,1')
+        ->name('register.store');
 });
 
 Route::middleware('auth')->group(function () {
