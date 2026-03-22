@@ -1,13 +1,13 @@
 {{-- Mobile / tablet: slide-out sidebar; tap backdrop to close --}}
 <div
     id="mobile-nav-backdrop"
-    class="fixed inset-0 top-16 z-[48] bg-black/40 opacity-0 pointer-events-none transition-opacity duration-200"
+    class="fixed inset-0 top-16 z-[48] bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 ease-out"
     aria-hidden="true"
 ></div>
 
 <div
     id="mobile-nav-drawer-panel"
-    class="fixed left-0 top-16 bottom-0 z-[49] w-64 max-w-[min(16rem,85vw)] border-r border-pink-100 bg-white shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex flex-col gap-2 overflow-y-auto transform -translate-x-full transition-transform duration-200 ease-out"
+    class="fixed left-0 top-16 bottom-0 z-[49] w-64 max-w-[min(16rem,85vw)] border-r border-pink-100 bg-white shadow-[4px_0_24px_rgba(0,0,0,0.08)] flex flex-col gap-2 overflow-y-auto transform -translate-x-full transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
     role="dialog"
     aria-modal="true"
     aria-labelledby="mobile-nav-heading"
@@ -18,9 +18,7 @@
     </div>
     <div class="px-4 pt-2 pb-4">
         <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary shrink-0">
-                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">lunch_dining</span>
-            </div>
+            @include('partials.brand-logo', ['class' => 'w-10 h-10 rounded-full object-cover border border-pink-100 bg-white shadow-sm shrink-0'])
             <div>
                 <div class="text-sm font-black text-pink-600">Snack Admin</div>
                 <div class="text-xs text-zinc-500">Inventory Manager</div>
@@ -79,7 +77,7 @@
             document.body.classList.remove('overflow-hidden');
             setTimeout(function () {
                 if (drawer.classList.contains('-translate-x-full')) drawer.setAttribute('hidden', '');
-            }, 260);
+            }, 320);
         }
     }
 

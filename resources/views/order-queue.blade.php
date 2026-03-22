@@ -111,7 +111,10 @@
 <header class="fixed top-0 w-full z-50 border-b border-pink-100 bg-white/80 backdrop-blur-md shadow-[0_4px_16px_rgba(224,64,160,0.15)] flex justify-between items-center gap-2 px-4 sm:px-6 h-16">
     <div class="grid grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1">
         @include('partials.mobile-nav-menu-button')
-        <div class="text-xl sm:text-2xl font-black tracking-tight text-pink-600 truncate min-w-0">AKEIRA'S SNACK INN</div>
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            @include('partials.brand-logo', ['class' => 'h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full object-cover border-2 border-pink-100 bg-white shadow-sm'])
+            <div class="text-xl sm:text-2xl font-black tracking-tight text-pink-600 truncate min-w-0">AKEIRA'S SNACK INN</div>
+        </div>
     </div>
     <div class="flex items-center gap-4">
         <form method="GET" action="{{ route('order-queue.index') }}" class="hidden md:flex relative">
@@ -134,9 +137,7 @@
 <aside class="h-screen w-64 fixed left-0 top-0 pt-20 border-r border-pink-100 bg-pink-50/50 flex flex-col gap-2 z-40 hidden xl:flex">
     <div class="px-6 mb-6">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">lunch_dining</span>
-            </div>
+            @include('partials.brand-logo', ['class' => 'w-10 h-10 rounded-full object-cover border border-pink-100 bg-white shadow-sm shrink-0'])
             <div>
                 <div class="text-sm font-black text-pink-600">Snack Admin</div>
                 <div class="text-xs text-zinc-500">Inventory Manager</div>
@@ -286,8 +287,8 @@
                                         @if ($item->product?->image_path)
                                             <img src="{{ asset('storage/' . $item->product->image_path) }}" alt="{{ $item->product->name }}" class="w-12 h-12 rounded-lg object-cover shrink-0"/>
                                         @else
-                                            <div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center shrink-0">
-                                                <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">lunch_dining</span>
+                                            <div class="w-12 h-12 rounded-lg overflow-hidden border border-pink-100 bg-white shrink-0 shadow-sm">
+                                                <img src="{{ asset('images/logo.jpg') }}" alt="" class="w-full h-full object-cover"/>
                                             </div>
                                         @endif
                                         <div class="flex-1">

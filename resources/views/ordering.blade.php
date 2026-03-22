@@ -93,7 +93,10 @@
 <header class="fixed top-0 w-full z-50 border-b border-pink-100 bg-white/80 backdrop-blur-md shadow-[0_4px_16px_rgba(224,64,160,0.15)] flex justify-between items-center gap-2 px-4 sm:px-6 h-16">
     <div class="grid grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1">
         @include('partials.mobile-nav-menu-button')
-        <div class="text-xl sm:text-2xl font-black tracking-tight text-pink-600 truncate min-w-0">AKEIRA'S SNACK INN</div>
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            @include('partials.brand-logo', ['class' => 'h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full object-cover border-2 border-pink-100 bg-white shadow-sm'])
+            <div class="text-xl sm:text-2xl font-black tracking-tight text-pink-600 truncate min-w-0">AKEIRA'S SNACK INN</div>
+        </div>
     </div>
     <div class="flex items-center gap-4">
         <form method="GET" action="{{ route('ordering.index') }}" class="hidden md:flex relative">
@@ -113,9 +116,7 @@
 <aside class="h-screen w-64 fixed left-0 top-0 pt-20 border-r border-pink-100 bg-pink-50/50 hidden xl:flex flex-col gap-2 z-40">
     <div class="px-6 mb-6">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">lunch_dining</span>
-            </div>
+            @include('partials.brand-logo', ['class' => 'w-10 h-10 rounded-full object-cover border border-pink-100 bg-white shadow-sm shrink-0'])
             <div>
                 <div class="text-sm font-black text-pink-600">Snack Admin</div>
                 <div class="text-xs text-zinc-500">Inventory Manager</div>
@@ -190,8 +191,8 @@
                     @if ($product->image_path)
                         <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}"/>
                     @else
-                        <div class="w-full h-full bg-primary-fixed flex items-center justify-center">
-                            <span class="material-symbols-outlined text-primary text-6xl" style="font-variation-settings:'FILL' 1;">lunch_dining</span>
+                        <div class="w-full h-full bg-pink-50 flex items-center justify-center p-6">
+                            <img src="{{ asset('images/logo.jpg') }}" alt="" class="max-h-full max-w-full object-contain rounded-xl shadow-sm"/>
                         </div>
                     @endif
                     @if ($loop->first)
@@ -224,11 +225,11 @@
 </main>
 
 {{-- Mobile / tablet: floating cart (updated via fetch; host always in DOM for AJAX) --}}
-<div id="ordering-cart-toast" class="fixed top-20 left-1/2 z-[55] -translate-x-1/2 rounded-full bg-zinc-900/90 text-white px-4 py-2 text-sm font-bold shadow-lg opacity-0 pointer-events-none transition-opacity duration-200 max-w-[90vw] text-center" role="status" aria-live="polite"></div>
+<div id="ordering-cart-toast" class="fixed top-20 left-1/2 z-[55] -translate-x-1/2 rounded-full bg-zinc-900/90 text-white px-4 py-2 text-sm font-bold shadow-lg opacity-0 pointer-events-none scale-95 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] max-w-[90vw] text-center" role="status" aria-live="polite"></div>
 
 <div
     id="ordering-mobile-cart-host"
-    class="xl:hidden fixed bottom-0 left-0 right-0 z-[45] pointer-events-none px-3 sm:px-4 {{ $itemCount > 0 ? '' : 'hidden' }}"
+    class="xl:hidden fixed bottom-0 left-0 right-0 z-[45] pointer-events-none px-3 sm:px-4 transform transition-transform transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform {{ $itemCount > 0 ? '' : 'hidden' }}"
     style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));"
     aria-label="Shopping cart"
     @if ($itemCount === 0) aria-hidden="true" @endif
@@ -244,31 +245,44 @@
     </div>
 </aside>
 
+{{-- Ensure Tailwind generates grid-row / motion classes used from JS --}}
+<span class="hidden grid-rows-[0fr] grid-rows-[1fr] translate-y-full" aria-hidden="true"></span>
+
 <script>
 (function () {
     window.initOrderingMobileCartToggle = function () {
         var btn = document.getElementById('mobile-cart-floating-toggle');
-        var body = document.getElementById('mobile-cart-floating-body');
-        var collapsed = document.getElementById('mobile-cart-floating-collapsed');
         var icon = document.getElementById('mobile-cart-floating-toggle-icon');
         var panel = document.getElementById('mobile-floating-cart-panel');
-        if (!btn || !body || !collapsed || !icon || !panel) return;
+        if (!btn || !icon || !panel) return;
 
         if (btn.dataset.cartToggleBound === '1') return;
         btn.dataset.cartToggleBound = '1';
 
+        var expandable = document.getElementById('mobile-cart-expandable');
+        var collapsedWrap = document.getElementById('mobile-cart-floating-collapsed');
+
         function setExpanded(expanded) {
             btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
             btn.setAttribute('aria-label', expanded ? 'Collapse cart' : 'Expand cart');
-            body.classList.toggle('hidden', !expanded);
-            collapsed.classList.toggle('hidden', expanded);
             icon.style.transform = expanded ? 'rotate(0deg)' : 'rotate(180deg)';
-            if (expanded) {
-                panel.classList.add('max-h-[min(55vh,28rem)]', 'overflow-hidden');
-                panel.classList.remove('max-h-none');
-            } else {
-                panel.classList.remove('max-h-[min(55vh,28rem)]', 'overflow-hidden');
-                panel.classList.add('max-h-none');
+
+            if (expandable) {
+                expandable.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+                expandable.classList.toggle('grid-rows-[1fr]', expanded);
+                expandable.classList.toggle('grid-rows-[0fr]', !expanded);
+            }
+            if (collapsedWrap) {
+                collapsedWrap.setAttribute('aria-hidden', expanded ? 'true' : 'false');
+                collapsedWrap.classList.toggle('grid-rows-[1fr]', !expanded);
+                collapsedWrap.classList.toggle('grid-rows-[0fr]', expanded);
+            }
+            if (panel) {
+                if (expanded) {
+                    panel.classList.add('max-h-[min(55vh,28rem)]');
+                } else {
+                    panel.classList.remove('max-h-[min(55vh,28rem)]');
+                }
             }
         }
 
@@ -286,10 +300,12 @@
         var el = document.getElementById('ordering-cart-toast');
         if (!el || !msg) return;
         el.textContent = msg;
-        el.classList.remove('opacity-0');
+        el.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+        el.classList.add('scale-100');
         clearTimeout(el._toastT);
         el._toastT = setTimeout(function () {
-            el.classList.add('opacity-0');
+            el.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            el.classList.remove('scale-100');
         }, 2000);
     }
 
@@ -308,10 +324,20 @@
                 mobileHost.innerHTML = data.fragments.mobile;
                 mobileHost.classList.remove('hidden');
                 mobileHost.removeAttribute('aria-hidden');
+                mobileHost.classList.add('translate-y-full', 'opacity-0');
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () {
+                        mobileHost.classList.remove('translate-y-full', 'opacity-0');
+                    });
+                });
             } else {
-                mobileHost.innerHTML = '';
-                mobileHost.classList.add('hidden');
-                mobileHost.setAttribute('aria-hidden', 'true');
+                mobileHost.classList.add('translate-y-full', 'opacity-0');
+                setTimeout(function () {
+                    mobileHost.innerHTML = '';
+                    mobileHost.classList.add('hidden');
+                    mobileHost.classList.remove('translate-y-full', 'opacity-0');
+                    mobileHost.setAttribute('aria-hidden', 'true');
+                }, 280);
             }
         }
         if (main) {

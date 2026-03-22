@@ -20,8 +20,8 @@
             @if (!empty($item['image_path']))
                 <img class="w-12 h-12 rounded-lg object-cover" src="{{ asset('storage/' . $item['image_path']) }}" alt="{{ $item['name'] }}"/>
             @else
-                <div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center">
-                    <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">lunch_dining</span>
+                <div class="w-12 h-12 rounded-lg overflow-hidden border border-pink-100 bg-white shrink-0 shadow-sm">
+                    <img src="{{ asset('images/logo.jpg') }}" alt="" class="w-full h-full object-cover"/>
                 </div>
             @endif
             <div class="flex-1 min-w-0">

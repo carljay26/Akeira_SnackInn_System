@@ -95,19 +95,19 @@
     <div class="absolute top-[-10%] left-[-5%] w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute bottom-[-10%] right-[-5%] w-80 h-80 bg-tertiary/10 rounded-full blur-3xl pointer-events-none"></div>
 
-    <div class="absolute top-20 right-10 opacity-20 transform rotate-12 hidden md:block pointer-events-none">
-        <span class="material-symbols-outlined text-primary" style="font-size:9rem; font-variation-settings:'FILL' 1;">person_add</span>
+    <div class="absolute top-20 right-10 opacity-20 transform rotate-12 hidden md:block pointer-events-none select-none">
+        <img src="{{ asset('images/logo.jpg') }}" alt="" class="h-40 w-40 rounded-full object-cover border-4 border-white/50 shadow-lg" width="160" height="160" decoding="async"/>
     </div>
-    <div class="absolute bottom-20 left-10 opacity-20 transform -rotate-12 hidden md:block pointer-events-none">
-        <span class="material-symbols-outlined text-secondary" style="font-size:9rem; font-variation-settings:'FILL' 1;">lunch_dining</span>
+    <div class="absolute bottom-20 left-10 opacity-25 transform -rotate-12 hidden md:block pointer-events-none select-none">
+        <img src="{{ asset('images/logo.jpg') }}" alt="" class="h-36 w-36 rounded-full object-cover border-4 border-white/50 shadow-lg" width="144" height="144" decoding="async"/>
     </div>
 
     <div class="relative z-10 flex w-full flex-col items-center justify-start px-4 pt-8 pb-20 sm:pb-24">
     <div class="w-full max-w-md">
 
         <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center p-4 bg-white rounded-full shadow-[0_8px_24px_rgba(224,64,160,0.15)] mb-6 bouncy-hover cursor-pointer">
-                <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings:'FILL' 1;">app_registration</span>
+            <div class="inline-flex items-center justify-center p-3 bg-white rounded-full shadow-[0_8px_24px_rgba(224,64,160,0.15)] mb-6 bouncy-hover cursor-pointer ring-2 ring-pink-100/80">
+                <img src="{{ asset('images/logo.jpg') }}" alt="Akeira's Snack Inn" class="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover" width="112" height="112" decoding="async"/>
             </div>
             <h1 class="text-4xl font-black tracking-tight text-primary mb-2">AKEIRA'S SNACK INN</h1>
             <p class="text-on-surface-variant font-medium">Create your staff account</p>
@@ -217,13 +217,13 @@
     </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 w-full h-16 sm:h-20 pointer-events-none opacity-30">
-        <div class="flex justify-around items-end h-full px-3 sm:px-6 gap-0.5 overflow-hidden max-w-2xl mx-auto">
-            <span class="material-symbols-outlined text-primary-container translate-y-1/4 shrink-0" style="font-size:3rem; font-variation-settings:'FILL' 1;">lunch_dining</span>
-            <span class="material-symbols-outlined text-secondary-container translate-y-1/4 shrink-0 hidden sm:block" style="font-size:2.75rem; font-variation-settings:'FILL' 1;">takeout_dining</span>
-            <span class="material-symbols-outlined text-tertiary-container translate-y-1/4 shrink-0" style="font-size:3.25rem; font-variation-settings:'FILL' 1;">local_drink</span>
-            <span class="material-symbols-outlined text-primary-container translate-y-1/4 shrink-0 hidden sm:block" style="font-size:2.75rem; font-variation-settings:'FILL' 1;">lunch_dining</span>
-            <span class="material-symbols-outlined text-secondary-container translate-y-1/4 shrink-0 hidden md:block" style="font-size:3rem; font-variation-settings:'FILL' 1;">takeout_dining</span>
+    <div class="fixed bottom-0 left-0 w-full h-16 sm:h-20 pointer-events-none opacity-40">
+        <div class="flex justify-around items-end h-full px-3 sm:px-6 gap-2 overflow-hidden max-w-2xl mx-auto">
+            <img src="{{ asset('images/logo.jpg') }}" alt="" class="h-11 w-11 sm:h-14 sm:w-14 translate-y-1/4 shrink-0 rounded-full object-cover border-2 border-pink-100/60 shadow-sm" width="56" height="56" decoding="async"/>
+            <img src="{{ asset('images/logo.jpg') }}" alt="" class="h-10 w-10 sm:h-12 sm:w-12 translate-y-1/4 shrink-0 hidden sm:block rounded-full object-cover border-2 border-pink-100/60 shadow-sm" width="48" height="48" decoding="async"/>
+            <img src="{{ asset('images/logo.jpg') }}" alt="" class="h-12 w-12 sm:h-16 sm:w-16 translate-y-1/4 shrink-0 rounded-full object-cover border-2 border-pink-200/80 shadow-md ring-2 ring-pink-100/50" width="64" height="64" decoding="async"/>
+            <img src="{{ asset('images/logo.jpg') }}" alt="" class="h-10 w-10 sm:h-12 sm:w-12 translate-y-1/4 shrink-0 hidden sm:block rounded-full object-cover border-2 border-pink-100/60 shadow-sm" width="48" height="48" decoding="async"/>
+            <img src="{{ asset('images/logo.jpg') }}" alt="" class="h-11 w-11 sm:h-14 sm:w-14 translate-y-1/4 shrink-0 hidden md:block rounded-full object-cover border-2 border-pink-100/60 shadow-sm" width="56" height="56" decoding="async"/>
         </div>
     </div>
 
