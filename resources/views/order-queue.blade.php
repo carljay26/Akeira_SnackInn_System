@@ -264,7 +264,7 @@
                     <div class="flex flex-1 min-w-0 justify-start">
                         <label class="inline-flex items-center gap-2.5 cursor-pointer font-bold text-on-surface text-sm select-none">
                             <input type="checkbox" id="queue-select-all" class="rounded border-pink-300 text-primary focus:ring-primary w-5 h-5 shrink-0" aria-label="Select all orders on this page"/>
-                            <span>Select all <span class="text-on-surface-variant font-medium">(this page)</span></span>
+                            <span>Select all</span>
                         </label>
                     </div>
                     <div class="flex flex-1 min-w-0 justify-center">
@@ -381,7 +381,7 @@
                                     <div class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-2xl bg-white border border-pink-50" data-queue-line="{{ $item->id }}">
                                         <div class="flex items-center gap-4 flex-1 min-w-0">
                                             @if ($item->product?->image_path)
-                                                <img src="{{ asset('storage/' . $item->product->image_path) }}" alt="{{ $item->product->name }}" class="w-12 h-12 rounded-lg object-cover shrink-0"/>
+                                                <img src="{{ $item->product->image_url }}" alt="{{ $item->product->name }}" class="w-12 h-12 rounded-lg object-cover shrink-0"/>
                                             @else
                                                 <div class="w-12 h-12 rounded-lg overflow-hidden border border-pink-100 bg-white shrink-0 shadow-sm">
                                                     <img src="{{ asset('images/logo.jpg') }}" alt="" class="w-full h-full object-cover"/>

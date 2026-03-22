@@ -58,7 +58,7 @@ class ProductController extends Controller
         $validated = $this->validateProduct($request);
 
         if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('products', 'public');
+            $validated['image_path'] = $this->storeProductImage($request);
         }
 
         Product::create(array_merge($validated, [
@@ -83,10 +83,8 @@ class ProductController extends Controller
         $validated = $this->validateProduct($request, true);
 
         if ($request->hasFile('image')) {
-            if ($product->image_path) {
-                Storage::disk('public')->delete($product->image_path);
-            }
-            $validated['image_path'] = $request->file('image')->store('products', 'public');
+            $this->deleteProductImageFile($product);
+            $validated['image_path'] = $this->storeProductImage($request);
         }
 
         $product->update($validated);
@@ -123,9 +121,7 @@ class ProductController extends Controller
             SnackInnNotifier::notifyProductRemoved($request->user(), $name);
         }
 
-        if ($product->image_path) {
-            Storage::disk('public')->delete($product->image_path);
-        }
+        $this->deleteProductImageFile($product);
 
         $product->delete();
 
@@ -146,5 +142,36 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'image' => $imageRules,
         ]);
+    }
+
+    private function productImageDisk(): string
+    {
+        return config('snack_inn.product_images_disk', 'public');
+    }
+
+    private function storeProductImage(Request $request): string
+    {
+        $disk = $this->productImageDisk();
+
+        $path = Storage::disk($disk)->putFile(
+            'products',
+            $request->file('image'),
+            ['visibility' => 'public']
+        );
+
+        if ($path === false) {
+            throw new \RuntimeException('Could not store product image.');
+        }
+
+        return $path;
+    }
+
+    private function deleteProductImageFile(Product $product): void
+    {
+        if (! $product->image_path || preg_match('#\Ahttps?://#i', $product->image_path)) {
+            return;
+        }
+
+        Storage::disk($this->productImageDisk())->delete($product->image_path);
     }
 }

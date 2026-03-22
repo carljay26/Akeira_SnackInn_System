@@ -294,7 +294,7 @@
                                     @endphp
                                     <div class="flex items-center gap-4 p-3 rounded-2xl bg-white border border-pink-50">
                                         @if ($item->product?->image_path)
-                                            <img src="{{ asset('storage/' . $item->product->image_path) }}" alt="{{ $item->product->name }}" class="w-12 h-12 rounded-lg object-cover shrink-0"/>
+                                            <img src="{{ $item->product->image_url }}" alt="{{ $item->product->name }}" class="w-12 h-12 rounded-lg object-cover shrink-0"/>
                                         @else
                                             <div class="w-12 h-12 rounded-lg overflow-hidden border border-pink-100 bg-white shrink-0 shadow-sm">
                                                 <img src="{{ asset('images/logo.jpg') }}" alt="" class="w-full h-full object-cover"/>
@@ -381,7 +381,7 @@
                 <div class="flex items-center gap-2 min-w-0">
                     @if (!empty($soldItem->image_path))
                         <img
-                            src="{{ asset('storage/' . $soldItem->image_path) }}"
+                            src="{{ \App\Models\Product::publicImageUrl($soldItem->image_path) }}"
                             alt="{{ $soldItem->name }}"
                             class="w-9 h-9 rounded-lg object-cover shrink-0"
                         />

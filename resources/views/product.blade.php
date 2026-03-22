@@ -270,7 +270,7 @@
                             {{-- Product image --}}
                             <div class="w-20 h-20 rounded-lg bg-primary-fixed/30 flex items-center justify-center overflow-hidden flex-shrink-0">
                                 @if ($product->image_path)
-                                    <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="w-full h-full object-cover"/>
+                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover"/>
                                 @else
                                     <img src="{{ asset('images/logo.jpg') }}" alt="" class="w-full h-full object-cover"/>
                                 @endif

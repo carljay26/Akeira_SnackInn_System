@@ -18,7 +18,7 @@
         @endphp
         <div class="flex gap-3 items-center p-2 rounded-lg hover:bg-pink-50 transition-colors">
             @if (!empty($item['image_path']))
-                <img class="w-12 h-12 rounded-lg object-cover" src="{{ asset('storage/' . $item['image_path']) }}" alt="{{ $item['name'] }}"/>
+                <img class="w-12 h-12 rounded-lg object-cover" src="{{ \App\Models\Product::publicImageUrl($item['image_path']) }}" alt="{{ $item['name'] }}"/>
             @else
                 <div class="w-12 h-12 rounded-lg overflow-hidden border border-pink-100 bg-white shrink-0 shadow-sm">
                     <img src="{{ asset('images/logo.jpg') }}" alt="" class="w-full h-full object-cover"/>

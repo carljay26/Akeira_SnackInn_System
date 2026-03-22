@@ -189,7 +189,7 @@
             <div class="bg-white rounded-lg p-4 shadow-[0_4px_16px_rgba(224,64,160,0.1)] bouncy-hover flex flex-col group">
                 <div class="relative h-48 rounded-lg overflow-hidden mb-4">
                     @if ($product->image_path)
-                        <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}"/>
+                        <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ $product->image_url }}" alt="{{ $product->name }}"/>
                     @else
                         <div class="w-full h-full bg-pink-50 flex items-center justify-center p-6">
                             <img src="{{ asset('images/logo.jpg') }}" alt="" class="max-h-full max-w-full object-contain rounded-xl shadow-sm"/>
