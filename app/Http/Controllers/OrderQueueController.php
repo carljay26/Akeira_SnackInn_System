@@ -77,23 +77,7 @@ class OrderQueueController extends Controller
 
         try {
             DB::transaction(function () use ($order, $request) {
-                $order->load('items');
-                foreach ($order->items as $item) {
-                    $product = Product::lockForUpdate()->findOrFail($item->product_id);
-                    if ($item->quantity > $product->stock) {
-                        throw new \RuntimeException(
-                            "Cannot complete: not enough stock for “{$product->name}” (need {$item->quantity}, available {$product->stock})."
-                        );
-                    }
-                    $product->decrement('stock', $item->quantity);
-                    $product->refresh();
-                    SnackInnNotifier::notifyLowStockIfNeeded($request->user(), $product);
-                }
-
-                $order->update([
-                    'status' => 'completed',
-                    'completed_at' => now(),
-                ]);
+                $this->completePendingOrder($order, $request);
             });
         } catch (\RuntimeException $e) {
             return redirect()
@@ -104,6 +88,87 @@ class OrderQueueController extends Controller
         return redirect()
             ->route('order-queue.index')
             ->with('status', 'Order finished successfully.');
+    }
+
+    public function finishSelectedOrders(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'order_ids' => ['required', 'array', 'min:1', 'max:50'],
+            'order_ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $shopId = $request->user()->shop_id;
+        $ids = array_values(array_unique(array_map('intval', $validated['order_ids'])));
+        $expected = count($ids);
+
+        try {
+            $finished = DB::transaction(function () use ($ids, $shopId, $request, $expected) {
+                $orders = Order::query()
+                    ->where('shop_id', $shopId)
+                    ->where('status', 'pending')
+                    ->whereIn('id', $ids)
+                    ->orderBy('id')
+                    ->with('items')
+                    ->lockForUpdate()
+                    ->get();
+
+                if ($orders->count() !== $expected) {
+                    throw new \RuntimeException('__BULK_STALE__');
+                }
+
+                foreach ($orders as $order) {
+                    $this->completePendingOrder($order, $request);
+                }
+
+                return $orders->count();
+            });
+        } catch (\RuntimeException $e) {
+            if ($e->getMessage() === '__BULK_STALE__') {
+                return redirect()
+                    ->route('order-queue.index')
+                    ->withErrors([
+                        'bulk_finish' => 'Some selected orders are missing or no longer pending. Refresh the page and try again.',
+                    ]);
+            }
+
+            return redirect()
+                ->route('order-queue.index')
+                ->withErrors(['stock' => $e->getMessage()]);
+        }
+
+        $n = $finished;
+
+        return redirect()
+            ->route('order-queue.index')
+            ->with('status', $n === 1
+                ? 'Order finished successfully.'
+                : "Finished {$n} orders successfully.");
+    }
+
+    /**
+     * Decrement stock for each line and mark the order completed (caller must hold a transaction + pending guard).
+     *
+     * @throws \RuntimeException
+     */
+    private function completePendingOrder(Order $order, Request $request): void
+    {
+        $order->load('items');
+        foreach ($order->items as $item) {
+            $product = Product::lockForUpdate()->findOrFail($item->product_id);
+            if ($item->quantity > $product->stock) {
+                throw new \RuntimeException(
+                    "Order #{$order->id}: not enough stock for “{$product->name}” (need {$item->quantity}, available {$product->stock})."
+                );
+            }
+            $product->decrement('stock', $item->quantity);
+            $product->refresh();
+            SnackInnNotifier::notifyLowStockIfNeeded($request->user(), $product);
+        }
+
+        $order->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
     }
 
     public function removeOrder(Request $request, Order $order): RedirectResponse

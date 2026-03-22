@@ -56,6 +56,9 @@ Route::middleware(['auth', 'shop'])->group(function () {
     Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
 
     Route::get('/order-queue', [OrderQueueController::class, 'index'])->name('order-queue.index');
+    Route::post('/order-queue/finish-selected', [OrderQueueController::class, 'finishSelectedOrders'])
+        ->middleware('throttle:30,1')
+        ->name('order-queue.finish-selected');
     Route::post('/order-queue/{order}/finish', [OrderQueueController::class, 'finishOrder'])->name('order-queue.finish');
     Route::post('/order-queue/{order}/items', [OrderQueueController::class, 'addOrderItem'])->name('order-queue.add-item');
     Route::patch('/order-queue/{order}/items/{orderItem}', [OrderQueueController::class, 'updateOrderItem'])->name('order-queue.update-item');

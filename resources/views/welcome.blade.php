@@ -165,16 +165,30 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex-1 min-h-[200px] relative rounded-lg overflow-hidden bg-gradient-to-br from-pink-100 via-primary-fixed/40 to-secondary-container flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[120px] text-primary/30 group-hover:scale-110 transition-transform duration-500" style="font-variation-settings: 'FILL' 1;">lunch_dining</span>
+                <div class="flex-1 min-h-[200px] md:min-h-[260px] relative rounded-lg overflow-hidden border border-pink-100/60 bg-surface-container-low shadow-inner">
+                    <img
+                        src="{{ asset('images/products.jpg') }}"
+                        alt="Products and stock management in Akeira's Snack Inn"
+                        class="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        width="800"
+                        height="600"
+                    />
                 </div>
             </div>
         </div>
         {{-- Ordering --}}
         <div class="md:col-span-4 group relative overflow-hidden bg-white rounded-lg p-8 shadow-[0_4px_16px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_32px_rgba(124,82,170,0.15)] transition-all duration-300 hover:-translate-y-2 border border-purple-50">
             <div class="space-y-6">
-                <div class="h-48 rounded-lg bg-secondary-container overflow-hidden flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[80px] text-secondary/40 group-hover:scale-110 transition-transform duration-500" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+                <div class="h-48 rounded-lg overflow-hidden border border-purple-100/50 bg-surface-container-low relative">
+                    <img
+                        src="{{ asset('images/ordering.jpg') }}"
+                        alt="Place an order — browse menu and cart in Snack Inn"
+                        class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        width="640"
+                        height="480"
+                    />
                 </div>
                 <div class="space-y-2">
                     <span class="px-4 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full font-bold text-xs uppercase tracking-widest">Ordering</span>
@@ -186,8 +200,15 @@
         {{-- Order queue --}}
         <div class="md:col-span-4 group relative overflow-hidden bg-white rounded-lg p-8 shadow-[0_4px_16px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_32px_rgba(0,150,204,0.15)] transition-all duration-300 hover:-translate-y-2 border border-sky-50">
             <div class="space-y-6">
-                <div class="h-48 rounded-lg bg-tertiary-container/40 overflow-hidden flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[80px] text-tertiary/50 group-hover:scale-110 transition-transform duration-500" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+                <div class="h-48 rounded-lg overflow-hidden border border-sky-100/50 bg-surface-container-low relative">
+                    <img
+                        src="{{ asset('images/order_queue.jpg') }}"
+                        alt="Order queue — pending tickets and operations"
+                        class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        width="640"
+                        height="480"
+                    />
                 </div>
                 <div class="space-y-2">
                     <span class="px-4 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full font-bold text-xs uppercase tracking-widest">Operations</span>
@@ -217,12 +238,18 @@
     <div class="w-full px-4 sm:px-5 grid md:grid-cols-2 gap-12 md:gap-16 items-center">
         <div class="relative order-2 md:order-1">
             <div class="aspect-square bg-white rounded-lg p-4 shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 max-w-md mx-auto md:max-w-none">
-                <div class="w-full h-full rounded-lg bg-gradient-to-br from-pink-100 via-surface-container to-tertiary-fixed/30 overflow-hidden relative flex items-center justify-center">
-                    <div class="text-center p-8">
-                        <span class="material-symbols-outlined text-7xl text-primary/40 mb-4" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-                        <p class="font-black text-on-background text-lg">Dashboard, notifications, and quick signals for today’s work.</p>
+                <div class="w-full h-full rounded-lg overflow-hidden relative bg-surface-container-low min-h-0">
+                    <img
+                        src="{{ asset('images/dashboard.jpg') }}"
+                        alt="Dashboard — overview, notifications, and today’s signals in Snack Inn"
+                        class="absolute inset-0 w-full h-full object-cover object-center"
+                        loading="lazy"
+                        width="800"
+                        height="800"
+                    />
+                    <div class="absolute inset-x-0 bottom-0 p-4 sm:p-5 pt-12 bg-gradient-to-t from-on-background/85 via-on-background/40 to-transparent pointer-events-none">
+                        <p class="font-black text-white text-base sm:text-lg drop-shadow-sm">Dashboard, notifications, and quick signals for today’s work.</p>
                     </div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent pointer-events-none"></div>
                 </div>
             </div>
             <div class="absolute -bottom-4 sm:-bottom-6 -left-2 sm:-left-6 bg-tertiary text-white p-4 sm:p-6 rounded-lg shadow-xl -rotate-2 max-w-[200px] sm:max-w-none">

@@ -205,6 +205,13 @@
             </div>
         @endif
 
+        @if ($errors->has('bulk_finish'))
+            <div class="mb-6 px-4 py-3 rounded-2xl bg-error-container text-on-error-container text-sm font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-base">error</span>
+                {{ $errors->first('bulk_finish') }}
+            </div>
+        @endif
+
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
                 <h1 class="text-4xl font-black text-on-surface tracking-tight mb-2">Order Queue</h1>
@@ -233,8 +240,58 @@
             </div>
         </div>
 
-        <div class="grid gap-4">
-            @forelse ($orders as $order)
+        @if ($orders->isEmpty())
+            <div class="py-20 flex flex-col items-center gap-4 text-zinc-400">
+                <span class="material-symbols-outlined text-6xl">receipt_long</span>
+                <p class="text-lg font-bold">Queue is empty</p>
+                <a href="{{ route('ordering.index') }}" class="text-primary font-bold hover:underline text-sm">Place an order</a>
+            </div>
+        @else
+            <div class="mb-4 flex flex-wrap items-center justify-end gap-2">
+                <button
+                    type="button"
+                    id="queue-bulk-enter-btn"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-pink-200 bg-white text-pink-600 text-sm font-black shadow-sm hover:bg-pink-50 hover:border-pink-300 active:scale-95 transition-all"
+                >
+                    <span class="material-symbols-outlined text-lg">checklist</span>
+                    Select orders
+                </button>
+            </div>
+
+            <form id="queue-bulk-finish-form" method="POST" action="{{ route('order-queue.finish-selected') }}" class="hidden mb-4">
+                @csrf
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full">
+                    <div class="flex flex-1 min-w-0 justify-start">
+                        <label class="inline-flex items-center gap-2.5 cursor-pointer font-bold text-on-surface text-sm select-none">
+                            <input type="checkbox" id="queue-select-all" class="rounded border-pink-300 text-primary focus:ring-primary w-5 h-5 shrink-0" aria-label="Select all orders on this page"/>
+                            <span>Select all <span class="text-on-surface-variant font-medium">(this page)</span></span>
+                        </label>
+                    </div>
+                    <div class="flex flex-1 min-w-0 justify-center">
+                        <p id="queue-selected-summary" class="text-sm text-on-surface-variant font-medium text-center min-h-[1.25rem] self-center"></p>
+                    </div>
+                    <div class="flex flex-1 min-w-0 justify-end items-center gap-2">
+                        <button
+                            type="button"
+                            id="queue-bulk-cancel-btn"
+                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold text-zinc-600 border border-zinc-200 bg-white hover:bg-zinc-50 active:scale-95 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            id="queue-bulk-finish-btn"
+                            disabled
+                            class="px-6 py-2.5 rounded-full bg-primary text-white text-sm font-black shadow-[0_4px_12px_rgba(224,64,160,0.25)] hover:opacity-95 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                        >
+                            Finish selected
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="queue-orders-grid" class="grid gap-4">
+            @foreach ($orders as $order)
                 @php
                     $itemCount = $order->items->sum('quantity');
                     $iconBgs = ['bg-primary-fixed text-primary', 'bg-secondary-fixed text-secondary', 'bg-tertiary-fixed text-tertiary', 'bg-surface-container-high text-zinc-400'];
@@ -244,8 +301,18 @@
                     $dotColor = 'bg-amber-500';
                 @endphp
                 <div class="bg-white rounded-lg border border-pink-50 shadow-[0_4px_20px_rgba(224,64,160,0.06)] hover:shadow-[0_8px_24px_rgba(224,64,160,0.12)] hover:scale-[1.01] transition-all">
-                    <div class="p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div class="flex items-center gap-4 w-full md:w-auto">
+                    <div class="queue-order-select-row p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div class="flex items-center gap-3 sm:gap-4 w-full md:w-auto">
+                            <div class="queue-bulk-cb-slot hidden shrink-0 w-5 flex items-center justify-center" aria-hidden="true">
+                                <input
+                                    type="checkbox"
+                                    name="order_ids[]"
+                                    value="{{ $order->id }}"
+                                    form="queue-bulk-finish-form"
+                                    class="queue-order-cb rounded border-pink-300 text-primary focus:ring-primary w-5 h-5"
+                                    aria-label="Select order #{{ $order->id }}"
+                                />
+                            </div>
                             <div class="w-14 h-14 {{ $iconBgs[$idx] }} rounded-full flex items-center justify-center shrink-0">
                                 <span class="material-symbols-outlined text-2xl">{{ $icons[$idx] }}</span>
                             </div>
@@ -420,14 +487,9 @@
                         </div>
                     </div>
                 </div>
-            @empty
-                <div class="py-20 flex flex-col items-center gap-4 text-zinc-400">
-                    <span class="material-symbols-outlined text-6xl">receipt_long</span>
-                    <p class="text-lg font-bold">Queue is empty</p>
-                    <a href="{{ route('ordering.index') }}" class="text-primary font-bold hover:underline text-sm">Place an order</a>
-                </div>
-            @endforelse
-        </div>
+            @endforeach
+            </div>
+        @endif
 
         @if ($orders->hasPages())
             <div class="mt-12 flex items-center justify-center gap-2">
@@ -639,9 +701,32 @@
     </div>
 </div>
 
+<div id="queue-bulk-finish-confirm-modal" class="fixed inset-0 z-[72] hidden items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true" aria-labelledby="queue-bulk-finish-confirm-title" aria-describedby="queue-bulk-finish-confirm-desc">
+    <div class="w-full max-w-md rounded-3xl bg-white border border-pink-100 shadow-[0_12px_36px_rgba(0,0,0,0.15)] p-6" onclick="event.stopPropagation()">
+        <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined">task_alt</span>
+            </div>
+            <div>
+                <h3 id="queue-bulk-finish-confirm-title" class="text-lg font-black text-on-surface">Finish selected orders?</h3>
+                <p id="queue-bulk-finish-confirm-desc" class="text-sm text-on-surface-variant mt-1 font-medium"></p>
+            </div>
+        </div>
+        <div class="mt-6 flex justify-end gap-2">
+            <button type="button" onclick="closeQueueBulkFinishConfirmModal()" class="px-4 py-2 rounded-full border border-pink-100 text-zinc-600 font-bold text-sm hover:bg-pink-50 transition-colors">
+                Cancel
+            </button>
+            <button type="button" onclick="confirmQueueBulkFinishOrders()" class="px-4 py-2 rounded-full bg-primary text-on-primary font-black text-sm shadow-[0_4px_12px_rgba(224,64,160,0.3)] hover:opacity-95 transition-opacity">
+                Yes, finish
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     let pendingRemoveForm = null;
     let isQueueSidePanelHidden = false;
+    let queueBulkFinishAllowSubmit = false;
 
     function queueOpenAddItemModal(btn) {
         @if ($catalogProducts->isEmpty())
@@ -700,8 +785,46 @@
         closeRemoveModal();
     }
 
+    function openQueueBulkFinishConfirmModal(orderCount) {
+        var modal = document.getElementById('queue-bulk-finish-confirm-modal');
+        var desc = document.getElementById('queue-bulk-finish-confirm-desc');
+        if (!modal) return;
+        if (desc) {
+            desc.textContent = orderCount === 1
+                ? 'Finish 1 order now? Stock will be reduced for each line item.'
+                : 'Finish ' + orderCount + ' orders now? Stock will be reduced for each line item.';
+        }
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeQueueBulkFinishConfirmModal() {
+        var modal = document.getElementById('queue-bulk-finish-confirm-modal');
+        if (!modal) return;
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function confirmQueueBulkFinishOrders() {
+        var bulkForm = document.getElementById('queue-bulk-finish-form');
+        if (!bulkForm) {
+            closeQueueBulkFinishConfirmModal();
+            return;
+        }
+        queueBulkFinishAllowSubmit = true;
+        closeQueueBulkFinishConfirmModal();
+        bulkForm.requestSubmit();
+    }
+
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
+            var bulkFinishModal = document.getElementById('queue-bulk-finish-confirm-modal');
+            if (bulkFinishModal && !bulkFinishModal.classList.contains('hidden')) {
+                closeQueueBulkFinishConfirmModal();
+                return;
+            }
             var addModal = document.getElementById('add-item-modal');
             if (addModal && !addModal.classList.contains('hidden')) {
                 queueCloseAddItemModal();
@@ -716,6 +839,17 @@
             closeRemoveModal();
         }
     });
+
+    (function () {
+        var bulkFinishModal = document.getElementById('queue-bulk-finish-confirm-modal');
+        if (bulkFinishModal) {
+            bulkFinishModal.addEventListener('click', function (event) {
+                if (event.target.id === 'queue-bulk-finish-confirm-modal') {
+                    closeQueueBulkFinishConfirmModal();
+                }
+            });
+        }
+    })();
 
     (function () {
         var addModal = document.getElementById('add-item-modal');
@@ -811,6 +945,118 @@
         if (v > max) v = max;
         input.value = v;
     }
+
+    (function initQueueBulkFinish() {
+        var bulkForm = document.getElementById('queue-bulk-finish-form');
+        var selectAll = document.getElementById('queue-select-all');
+        var btn = document.getElementById('queue-bulk-finish-btn');
+        var summary = document.getElementById('queue-selected-summary');
+        var enterBtn = document.getElementById('queue-bulk-enter-btn');
+        var cancelBtn = document.getElementById('queue-bulk-cancel-btn');
+        if (!bulkForm || !selectAll || !btn || !enterBtn || !cancelBtn) return;
+
+        function getCbs() {
+            return document.querySelectorAll('input.queue-order-cb[type="checkbox"]');
+        }
+
+        function setBulkMode(on) {
+            bulkForm.classList.toggle('hidden', !on);
+            enterBtn.classList.toggle('hidden', on);
+            document.querySelectorAll('.queue-bulk-cb-slot').forEach(function (slot) {
+                slot.classList.toggle('hidden', !on);
+                slot.setAttribute('aria-hidden', on ? 'false' : 'true');
+            });
+            document.querySelectorAll('.queue-order-select-row').forEach(function (row) {
+                row.classList.toggle('cursor-pointer', on);
+            });
+            if (!on) {
+                getCbs().forEach(function (cb) {
+                    cb.checked = false;
+                });
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            }
+            sync();
+        }
+
+        function sync() {
+            var cbs = getCbs();
+            var n = 0;
+            cbs.forEach(function (cb) {
+                if (cb.checked) n++;
+            });
+            btn.disabled = n === 0;
+            if (summary) {
+                summary.textContent = n === 0 ? '' : n + ' order' + (n === 1 ? '' : 's') + ' selected';
+            }
+            if (cbs.length === 0) {
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+                return;
+            }
+            var allOn = n === cbs.length;
+            selectAll.checked = allOn;
+            selectAll.indeterminate = n > 0 && !allOn;
+        }
+
+        selectAll.addEventListener('change', function () {
+            var on = selectAll.checked;
+            getCbs().forEach(function (cb) {
+                cb.checked = on;
+            });
+            sync();
+        });
+
+        getCbs().forEach(function (cb) {
+            cb.addEventListener('change', sync);
+        });
+
+        var ordersGrid = document.getElementById('queue-orders-grid');
+        if (ordersGrid) {
+            ordersGrid.addEventListener('click', function (e) {
+                if (bulkForm.classList.contains('hidden')) return;
+                var row = e.target.closest('.queue-order-select-row');
+                if (!row) return;
+                if (e.target.closest('button')) return;
+                if (e.target.closest('a')) return;
+                if (e.target.closest('input[type="checkbox"]')) return;
+                var cb = row.querySelector('input.queue-order-cb');
+                if (!cb) return;
+                cb.checked = !cb.checked;
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        }
+
+        enterBtn.addEventListener('click', function () {
+            setBulkMode(true);
+            var first = document.querySelector('input.queue-order-cb');
+            if (first) first.focus();
+        });
+        cancelBtn.addEventListener('click', function () {
+            setBulkMode(false);
+            enterBtn.focus();
+        });
+
+        bulkForm.addEventListener('submit', function (e) {
+            if (queueBulkFinishAllowSubmit) {
+                queueBulkFinishAllowSubmit = false;
+                return;
+            }
+            var cbs = getCbs();
+            var n = 0;
+            cbs.forEach(function (cb) {
+                if (cb.checked) n++;
+            });
+            if (n === 0) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            openQueueBulkFinishConfirmModal(n);
+        });
+
+        sync();
+    })();
 </script>
 
 @include('partials.mobile-nav-drawer')

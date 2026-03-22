@@ -246,6 +246,20 @@
                             'bg-primary-fixed text-primary',
                         ];
                         $badge = $badgeColors[$loop->index % 3];
+                        $jsonFlags = JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE;
+                        $editPayloadJson = json_encode([
+                            'id' => (int) $product->id,
+                            'name' => (string) $product->name,
+                            'category' => (string) $product->category,
+                            'price' => (float) $product->price,
+                            'stock' => (int) $product->stock,
+                            'unit' => (string) $product->unit,
+                            'description' => (string) ($product->description ?? ''),
+                        ], $jsonFlags);
+                        $deletePayloadJson = json_encode([
+                            'id' => (int) $product->id,
+                            'name' => (string) $product->name,
+                        ], $jsonFlags);
                     @endphp
                     <div
                         id="product-card-{{ $product->id }}"
@@ -264,15 +278,17 @@
                             {{-- Action buttons --}}
                             <div class="flex gap-1">
                                 <button
-                                    onclick="openEditModal({{ $product->id }}, '{{ addslashes($product->name) }}', '{{ addslashes($product->category) }}', {{ $product->price }}, {{ $product->stock }}, '{{ addslashes($product->unit) }}', '{{ addslashes($product->description ?? '') }}')"
-                                    class="p-2 rounded-full hover:bg-pink-100 text-zinc-400 hover:text-primary transition-colors"
+                                    type="button"
+                                    class="js-product-edit-btn p-2 rounded-full hover:bg-pink-100 text-zinc-400 hover:text-primary transition-colors"
+                                    data-payload="{{ $editPayloadJson }}"
                                     title="Edit product"
                                 >
                                     <span class="material-symbols-outlined">edit</span>
                                 </button>
                                 <button
-                                    onclick="openDeleteModal({{ $product->id }}, '{{ addslashes($product->name) }}')"
-                                    class="p-2 rounded-full hover:bg-red-50 text-zinc-400 hover:text-error transition-colors"
+                                    type="button"
+                                    class="js-product-delete-btn p-2 rounded-full hover:bg-red-50 text-zinc-400 hover:text-error transition-colors"
+                                    data-payload="{{ $deletePayloadJson }}"
                                     title="Delete product"
                                 >
                                     <span class="material-symbols-outlined">delete</span>
@@ -523,6 +539,33 @@
         document.getElementById('deleteProductName').textContent = name;
         document.getElementById('deleteModal').showModal();
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.js-product-edit-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var raw = this.getAttribute('data-payload');
+                if (!raw) return;
+                try {
+                    var p = JSON.parse(raw);
+                    openEditModal(p.id, p.name, p.category, p.price, p.stock, p.unit, p.description);
+                } catch (err) {
+                    console.error('Could not open edit modal:', err);
+                }
+            });
+        });
+        document.querySelectorAll('.js-product-delete-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var raw = this.getAttribute('data-payload');
+                if (!raw) return;
+                try {
+                    var p = JSON.parse(raw);
+                    openDeleteModal(p.id, p.name);
+                } catch (err) {
+                    console.error('Could not open delete modal:', err);
+                }
+            });
+        });
+    });
 </script>
 
 <script>
