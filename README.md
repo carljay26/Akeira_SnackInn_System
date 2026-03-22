@@ -58,6 +58,38 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 If Chrome warns that a form is “not secure” (e.g. logout), set **`APP_URL`** in Railway Variables to your **https** public URL (e.g. `https://your-app.up.railway.app`). This app trusts proxy headers and forces HTTPS URLs in production so forms and redirects use TLS.
 
+## Local database: `Host 'localhost' is not allowed` (SQLSTATE 1130)
+
+MariaDB/MySQL rejected the user for the **client host** Laravel uses. `localhost` and `127.0.0.1` are different accounts in MySQL.
+
+### Quick fix (no MariaDB changes)
+
+In your **`.env`**, use **file** sessions/cache/queue so the app does not need the database for every request:
+
+```env
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
+```
+
+Then either:
+
+1. **Use SQLite** (matches `.env.example`): `DB_CONNECTION=sqlite`, `DB_DATABASE=database/database.sqlite`, create the file and run `php artisan migrate`, **or**
+2. **Fix MySQL user grants** — create the user for the host that matches **`DB_HOST`**:
+
+```sql
+-- If DB_HOST=127.0.0.1 in .env:
+CREATE USER IF NOT EXISTS 'your_user'@'127.0.0.1' IDENTIFIED BY 'your_password';
+GRANT ALL ON akeira_snackinn.* TO 'your_user'@'127.0.0.1';
+FLUSH PRIVILEGES;
+```
+
+If you prefer `DB_HOST=localhost`, also grant `'your_user'@'localhost'`.
+
+### Production (Railway, etc.)
+
+Use `SESSION_DRIVER=database` (or `redis`), `CACHE_STORE=database`, `QUEUE_CONNECTION=database` once MySQL credentials and user grants are correct.
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

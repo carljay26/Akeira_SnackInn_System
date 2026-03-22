@@ -6,6 +6,7 @@ use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +36,7 @@ class OrderingController extends Controller
         return view('ordering', compact('products', 'categories', 'cart', 'search', 'category'));
     }
 
-    public function addToCart(Request $request): RedirectResponse
+    public function addToCart(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
@@ -48,6 +49,10 @@ class OrderingController extends Controller
         $newQty = $existingQty + $validated['quantity'];
 
         if ($newQty > $product->stock) {
+            if ($this->shouldReturnCartJson($request)) {
+                return response()->json(['ok' => false, 'message' => 'Quantity exceeds available stock.'], 422);
+            }
+
             return back()->withErrors(['cart' => 'Quantity exceeds available stock.']);
         }
 
@@ -62,23 +67,35 @@ class OrderingController extends Controller
 
         $request->session()->put('cart', $cart);
 
+        if ($this->shouldReturnCartJson($request)) {
+            return $this->cartJsonResponse($request, 'Added to cart.');
+        }
+
         return back()->with('status', 'Added to cart.');
     }
 
-    public function removeFromCart(Request $request, Product $product): RedirectResponse
+    public function removeFromCart(Request $request, Product $product): RedirectResponse|JsonResponse
     {
         $cart = $request->session()->get('cart', []);
         unset($cart[$product->id]);
         $request->session()->put('cart', $cart);
 
+        if ($this->shouldReturnCartJson($request)) {
+            return $this->cartJsonResponse($request, 'Removed from cart.');
+        }
+
         return back()->with('status', 'Removed from cart.');
     }
 
-    public function decrementFromCart(Request $request, Product $product): RedirectResponse
+    public function decrementFromCart(Request $request, Product $product): RedirectResponse|JsonResponse
     {
         $cart = $request->session()->get('cart', []);
 
         if (! isset($cart[$product->id])) {
+            if ($this->shouldReturnCartJson($request)) {
+                return $this->cartJsonResponse($request);
+            }
+
             return back();
         }
 
@@ -89,6 +106,10 @@ class OrderingController extends Controller
         }
 
         $request->session()->put('cart', $cart);
+
+        if ($this->shouldReturnCartJson($request)) {
+            return $this->cartJsonResponse($request);
+        }
 
         return back();
     }
@@ -142,5 +163,35 @@ class OrderingController extends Controller
         $request->session()->forget('cart');
 
         return redirect()->route('order-queue.index')->with('status', 'Order placed successfully.');
+    }
+
+    private function shouldReturnCartJson(Request $request): bool
+    {
+        return $request->expectsJson() || $request->ajax();
+    }
+
+    private function cartJsonResponse(Request $request, ?string $message = null): JsonResponse
+    {
+        $cart = $request->session()->get('cart', []);
+        $cartItems = collect($cart);
+        $itemCount = (int) $cartItems->sum('quantity');
+        $subtotal = $cartItems->sum(fn ($item) => $item['price'] * $item['quantity']);
+        $total = round((float) $subtotal, 2);
+
+        $viewData = compact('cartItems', 'itemCount', 'subtotal', 'total');
+
+        return response()->json([
+            'ok' => true,
+            'message' => $message,
+            'itemCount' => $itemCount,
+            'subtotal' => $subtotal,
+            'total' => $total,
+            'fragments' => [
+                'mobile' => $itemCount > 0 ? view('partials.ordering-mobile-cart-float', $viewData)->render() : '',
+                'desktop' => view('partials.ordering-cart-panel', array_merge($viewData, [
+                    'cartScrollClass' => 'flex-1 min-h-0 overflow-y-auto',
+                ]))->render(),
+            ],
+        ]);
     }
 }

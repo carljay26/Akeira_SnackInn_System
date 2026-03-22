@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}"/>
     <title>AKEIRA'S SNACK INN - Order Products</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
@@ -149,7 +150,7 @@
     </nav>
 </aside>
 
-<main class="pt-20 min-h-screen pb-6 py-6 pl-5 pr-5 sm:pl-6 sm:pr-6 xl:pl-[calc(16rem+1.5rem)] xl:pr-8 xl:pr-[calc(20rem+1.5rem)]">
+<main id="ordering-main" class="pt-20 min-h-screen pl-5 pr-5 sm:pl-6 sm:pr-6 xl:pl-[calc(16rem+1.5rem)] xl:pr-8 xl:pr-[calc(20rem+1.5rem)] {{ $itemCount > 0 ? 'pb-44 xl:pb-6' : 'pb-6' }}">
     <div class="w-full max-w-none">
     @include('partials.flash-status', ['excludeWhen' => 'Added to cart.'])
     @if ($errors->has('cart'))
@@ -203,7 +204,7 @@
                 </div>
                 <div class="flex items-center justify-between">
                     <span class="text-xl font-black text-pink-600">PHP {{ number_format((float) $product->price, 2) }}<span class="text-xs text-zinc-400 font-normal"> /{{ $product->unit }}</span></span>
-                    <form method="POST" action="{{ route('ordering.cart.add') }}">
+                    <form method="POST" action="{{ route('ordering.cart.add') }}" data-ordering-cart-async>
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <input type="hidden" name="quantity" value="1">
@@ -222,74 +223,168 @@
     </div>
 </main>
 
-<aside class="hidden xl:flex fixed right-0 top-16 w-80 h-[calc(100vh-4rem)] bg-white border-l border-pink-100 rounded-l-2xl p-6 flex-col shadow-[-4px_0_16px_rgba(224,64,160,0.05)]">
-    <div class="flex items-center justify-between mb-8">
-        <h2 class="text-xl font-black text-pink-600 flex items-center gap-2">
-            <span class="material-symbols-outlined">shopping_basket</span>
-            My Cart
-        </h2>
-        <span class="bg-pink-100 text-pink-600 text-xs font-bold px-2 py-1 rounded-full">{{ $itemCount }} Items</span>
-    </div>
+{{-- Mobile / tablet: floating cart (updated via fetch; host always in DOM for AJAX) --}}
+<div id="ordering-cart-toast" class="fixed top-20 left-1/2 z-[55] -translate-x-1/2 rounded-full bg-zinc-900/90 text-white px-4 py-2 text-sm font-bold shadow-lg opacity-0 pointer-events-none transition-opacity duration-200 max-w-[90vw] text-center" role="status" aria-live="polite"></div>
 
-    <div class="flex-1 overflow-y-auto space-y-4 pr-2">
-        @forelse ($cartItems as $item)
-            @php
-                $unitLabel = trim((string) ($item['unit'] ?? 'pcs'));
-                $unitLabel = preg_replace('/^\d+\s*/', '', $unitLabel) ?: 'pcs';
-            @endphp
-            <div class="flex gap-3 items-center p-2 rounded-lg hover:bg-pink-50 transition-colors">
-                @if (!empty($item['image_path']))
-                    <img class="w-12 h-12 rounded-lg object-cover" src="{{ asset('storage/' . $item['image_path']) }}" alt="{{ $item['name'] }}"/>
-                @else
-                    <div class="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center">
-                        <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">lunch_dining</span>
-                    </div>
-                @endif
-                <div class="flex-1">
-                    <h4 class="text-sm font-bold">{{ $item['name'] }}</h4>
-                    <p class="text-xs text-zinc-500">{{ $item['quantity'] }} {{ $unitLabel }} x PHP {{ number_format((float) $item['price'], 2) }}</p>
-                </div>
-                <div class="text-right">
-                    <span class="text-sm font-black text-pink-600 block">PHP {{ number_format($item['quantity'] * $item['price'], 2) }}</span>
-                    <div class="mt-1 inline-flex items-center gap-2 rounded-full border border-pink-100 bg-pink-50 px-2 py-1">
-                        <form method="POST" action="{{ route('ordering.cart.decrement', $item['id']) }}">
-                            @csrf
-                            @method('PATCH')
-                            <button class="w-5 h-5 flex items-center justify-center rounded-full text-pink-600 hover:bg-pink-100 font-black leading-none" type="submit" aria-label="Decrease quantity">-</button>
-                        </form>
-                        <span class="text-xs font-black text-zinc-600 min-w-4 text-center">{{ $item['quantity'] }}</span>
-                        <form method="POST" action="{{ route('ordering.cart.add') }}">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $item['id'] }}">
-                            <input type="hidden" name="quantity" value="1">
-                            <button class="w-5 h-5 flex items-center justify-center rounded-full text-pink-600 hover:bg-pink-100 font-black leading-none" type="submit" aria-label="Increase quantity">+</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        @empty
-            <p class="text-sm text-zinc-500 font-medium">Your cart is empty.</p>
-        @endforelse
-    </div>
+<div
+    id="ordering-mobile-cart-host"
+    class="xl:hidden fixed bottom-0 left-0 right-0 z-[45] pointer-events-none px-3 sm:px-4 {{ $itemCount > 0 ? '' : 'hidden' }}"
+    style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));"
+    aria-label="Shopping cart"
+    @if ($itemCount === 0) aria-hidden="true" @endif
+>
+    @if ($itemCount > 0)
+        @include('partials.ordering-mobile-cart-float')
+    @endif
+</div>
 
-    <div class="border-t border-pink-100 pt-6 mt-6">
-        <div class="flex justify-between mb-2">
-            <span class="text-zinc-500">Subtotal</span>
-            <span class="font-bold">PHP {{ number_format($subtotal, 2) }}</span>
-        </div>
-        <div class="flex justify-between mb-6">
-            <span class="text-lg font-black">Total</span>
-            <span class="text-lg font-black text-pink-600">PHP {{ number_format($total, 2) }}</span>
-        </div>
-        <form method="POST" action="{{ route('ordering.place-order') }}">
-            @csrf
-            <button class="w-full bg-primary text-white py-4 rounded-full font-black shadow-[0_4px_16px_rgba(224,64,160,0.3)] bouncy-hover active:scale-95 flex items-center justify-center gap-2 {{ $itemCount === 0 ? 'opacity-60 cursor-not-allowed' : '' }}" type="submit" {{ $itemCount === 0 ? 'disabled' : '' }}>
-                Place Order
-                <span class="material-symbols-outlined">send</span>
-            </button>
-        </form>
+<aside class="hidden xl:flex xl:flex-col fixed right-0 top-16 w-80 h-[calc(100vh-4rem)] bg-white border-l border-pink-100 rounded-l-2xl p-6 shadow-[-4px_0_16px_rgba(224,64,160,0.05)]">
+    <div id="ordering-desktop-cart-inner" class="flex flex-col min-h-0 flex-1 h-full overflow-hidden">
+        @include('partials.ordering-cart-panel', ['cartScrollClass' => 'flex-1 min-h-0 overflow-y-auto'])
     </div>
 </aside>
+
+<script>
+(function () {
+    window.initOrderingMobileCartToggle = function () {
+        var btn = document.getElementById('mobile-cart-floating-toggle');
+        var body = document.getElementById('mobile-cart-floating-body');
+        var collapsed = document.getElementById('mobile-cart-floating-collapsed');
+        var icon = document.getElementById('mobile-cart-floating-toggle-icon');
+        var panel = document.getElementById('mobile-floating-cart-panel');
+        if (!btn || !body || !collapsed || !icon || !panel) return;
+
+        if (btn.dataset.cartToggleBound === '1') return;
+        btn.dataset.cartToggleBound = '1';
+
+        function setExpanded(expanded) {
+            btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            btn.setAttribute('aria-label', expanded ? 'Collapse cart' : 'Expand cart');
+            body.classList.toggle('hidden', !expanded);
+            collapsed.classList.toggle('hidden', expanded);
+            icon.style.transform = expanded ? 'rotate(0deg)' : 'rotate(180deg)';
+            if (expanded) {
+                panel.classList.add('max-h-[min(55vh,28rem)]', 'overflow-hidden');
+                panel.classList.remove('max-h-none');
+            } else {
+                panel.classList.remove('max-h-[min(55vh,28rem)]', 'overflow-hidden');
+                panel.classList.add('max-h-none');
+            }
+        }
+
+        setExpanded(true);
+
+        btn.addEventListener('click', function () {
+            var isOpen = btn.getAttribute('aria-expanded') === 'true';
+            setExpanded(!isOpen);
+        });
+    };
+
+    window.initOrderingMobileCartToggle();
+
+    function showOrderingToast(msg) {
+        var el = document.getElementById('ordering-cart-toast');
+        if (!el || !msg) return;
+        el.textContent = msg;
+        el.classList.remove('opacity-0');
+        clearTimeout(el._toastT);
+        el._toastT = setTimeout(function () {
+            el.classList.add('opacity-0');
+        }, 2000);
+    }
+
+    function applyOrderingCartPayload(data) {
+        if (!data || !data.ok) return;
+        var ic = data.itemCount;
+        var main = document.getElementById('ordering-main');
+        var mobileHost = document.getElementById('ordering-mobile-cart-host');
+        var desktopInner = document.getElementById('ordering-desktop-cart-inner');
+
+        if (desktopInner && data.fragments && typeof data.fragments.desktop === 'string') {
+            desktopInner.innerHTML = data.fragments.desktop;
+        }
+        if (mobileHost) {
+            if (ic > 0 && data.fragments && data.fragments.mobile) {
+                mobileHost.innerHTML = data.fragments.mobile;
+                mobileHost.classList.remove('hidden');
+                mobileHost.removeAttribute('aria-hidden');
+            } else {
+                mobileHost.innerHTML = '';
+                mobileHost.classList.add('hidden');
+                mobileHost.setAttribute('aria-hidden', 'true');
+            }
+        }
+        if (main) {
+            if (ic > 0) {
+                main.classList.remove('pb-6');
+                main.classList.add('pb-44', 'xl:pb-6');
+            } else {
+                main.classList.remove('pb-44', 'xl:pb-6');
+                main.classList.add('pb-6');
+            }
+        }
+        window.initOrderingMobileCartToggle();
+        if (data.message) {
+            showOrderingToast(data.message);
+        }
+    }
+
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        if (!form.hasAttribute('data-ordering-cart-async')) return;
+        e.preventDefault();
+        if (!csrf) return;
+
+        var fd = new FormData(form);
+        var method = (form.getAttribute('method') || 'POST').toUpperCase();
+        fetch(form.action, {
+            method: method === 'GET' ? 'GET' : 'POST',
+            body: method === 'GET' ? undefined : fd,
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrf,
+            },
+            credentials: 'same-origin',
+        })
+            .then(function (r) {
+                return r.json().then(function (j) {
+                    return { ok: r.ok, status: r.status, data: j };
+                });
+            })
+            .then(function (res) {
+                if (res.status === 422) {
+                    var msg =
+                        (res.data && res.data.message) ||
+                        (res.data &&
+                            res.data.errors &&
+                            Object.values(res.data.errors)
+                                .flat()
+                                .join(' ')) ||
+                        'Could not update cart.';
+                    showOrderingToast(msg);
+                    return;
+                }
+                if (!res.ok) {
+                    showOrderingToast('Could not update cart.');
+                    return;
+                }
+                if (res.data && res.data.ok === false) {
+                    showOrderingToast(res.data.message || 'Error');
+                    return;
+                }
+                applyOrderingCartPayload(res.data);
+            })
+            .catch(function () {
+                showOrderingToast('Network error.');
+            });
+    });
+})();
+</script>
 
 @include('partials.mobile-nav-drawer')
 @include('partials.logout-modal')
