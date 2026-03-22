@@ -12,6 +12,7 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
+        'shop_id',
         'user_id',
         'reference',
         'status',
@@ -33,6 +34,11 @@ class Order extends Model
             'completed_at' => 'datetime',
             'removed_at' => 'datetime',
         ];
+    }
+
+    public function shop(): BelongsTo
+    {
+        return $this->belongsTo(Shop::class);
     }
 
     public function user(): BelongsTo

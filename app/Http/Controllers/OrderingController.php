@@ -16,10 +16,12 @@ class OrderingController extends Controller
 {
     public function index(Request $request): View
     {
+        $shopId = $request->user()->shop_id;
         $search = $request->string('search')->toString();
         $category = $request->string('category')->toString();
 
         $products = Product::query()
+            ->where('shop_id', $shopId)
             ->where('is_active', true)
             ->where('stock', '>', 0)
             ->when($search, function ($query, $searchTerm) {
@@ -30,7 +32,12 @@ class OrderingController extends Controller
             ->latest()
             ->get();
 
-        $categories = Product::query()->select('category')->distinct()->orderBy('category')->pluck('category');
+        $categories = Product::query()
+            ->where('shop_id', $shopId)
+            ->select('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
         $cart = $request->session()->get('cart', []);
 
         return view('ordering', compact('products', 'categories', 'cart', 'search', 'category'));
@@ -43,7 +50,9 @@ class OrderingController extends Controller
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
-        $product = Product::findOrFail($validated['product_id']);
+        $product = Product::query()
+            ->where('shop_id', $request->user()->shop_id)
+            ->findOrFail($validated['product_id']);
         $cart = $request->session()->get('cart', []);
         $existingQty = $cart[$product->id]['quantity'] ?? 0;
         $newQty = $existingQty + $validated['quantity'];
@@ -76,6 +85,10 @@ class OrderingController extends Controller
 
     public function removeFromCart(Request $request, Product $product): RedirectResponse|JsonResponse
     {
+        if ($product->shop_id !== $request->user()->shop_id) {
+            abort(404);
+        }
+
         $cart = $request->session()->get('cart', []);
         unset($cart[$product->id]);
         $request->session()->put('cart', $cart);
@@ -89,6 +102,10 @@ class OrderingController extends Controller
 
     public function decrementFromCart(Request $request, Product $product): RedirectResponse|JsonResponse
     {
+        if ($product->shop_id !== $request->user()->shop_id) {
+            abort(404);
+        }
+
         $cart = $request->session()->get('cart', []);
 
         if (! isset($cart[$product->id])) {
@@ -122,12 +139,24 @@ class OrderingController extends Controller
             return back()->withErrors(['cart' => 'Your cart is empty.']);
         }
 
+        $shopId = $request->user()->shop_id;
+        foreach ($cart as $item) {
+            $belongs = Product::query()
+                ->where('shop_id', $shopId)
+                ->whereKey($item['id'])
+                ->exists();
+            if (! $belongs) {
+                return back()->withErrors(['cart' => 'Your cart contains an item that is not available for your shop. Clear the cart and try again.']);
+            }
+        }
+
         DB::transaction(function () use ($request, $cart) {
             $subtotal = collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
             $tax = 0.00;
             $total = round($subtotal, 2);
 
             $order = Order::create([
+                'shop_id' => $request->user()->shop_id,
                 'user_id' => $request->user()->id,
                 'reference' => 'AKR-' . now()->format('YmdHis') . random_int(100, 999),
                 'status' => 'pending',

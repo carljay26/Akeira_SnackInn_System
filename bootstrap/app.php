@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Railway / reverse proxies send X-Forwarded-Proto: https — without this
         // Laravel generates http:// URLs for forms and redirects, Chrome warns on POST.
         $middleware->trustProxies(at: '*');
+
+        $middleware->alias([
+            'shop' => \App\Http\Middleware\EnsureUserHasShop::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

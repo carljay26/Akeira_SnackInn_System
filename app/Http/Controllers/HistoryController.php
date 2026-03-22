@@ -12,7 +12,7 @@ class HistoryController extends Controller
 {
     public function index(Request $request): View
     {
-        $userId = $request->user()->id;
+        $shopId = $request->user()->shop_id;
         $filterDate = $request->string('date')->toString();
         $search = $request->string('search')->toString();
         $businessTimezone = 'Asia/Manila';
@@ -49,7 +49,7 @@ class HistoryController extends Controller
         };
 
         $query = Order::with(['items.product'])
-            ->where('user_id', $userId)
+            ->where('shop_id', $shopId)
             ->where('status', 'completed')
             ->when($search, fn ($q) => $q->where('reference', 'like', "%{$search}%"));
 
@@ -57,12 +57,12 @@ class HistoryController extends Controller
 
         $orders = $query->latest()->paginate(10)->withQueryString();
 
-        $totalOrdersQuery = Order::where('user_id', $userId)
+        $totalOrdersQuery = Order::where('shop_id', $shopId)
             ->where('status', 'completed')
             ->when($search, fn ($q) => $q->where('reference', 'like', "%{$search}%"));
         $totalOrdersCount = $applyDateFilter($totalOrdersQuery)->count();
 
-        $totalSalesQuery = Order::where('user_id', $userId)
+        $totalSalesQuery = Order::where('shop_id', $shopId)
             ->where('status', 'completed')
             ->when($search, fn ($q) => $q->where('reference', 'like', "%{$search}%"));
         $totalSales = (float) $applyDateFilter($totalSalesQuery)->sum('total');
@@ -70,7 +70,7 @@ class HistoryController extends Controller
         $soldItemsSummary = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->join('products', 'products.id', '=', 'order_items.product_id')
-            ->where('orders.user_id', $userId)
+            ->where('orders.shop_id', $shopId)
             ->where('orders.status', 'completed')
             ->when($search, fn ($q) => $q->where('orders.reference', 'like', "%{$search}%"))
             ->when(

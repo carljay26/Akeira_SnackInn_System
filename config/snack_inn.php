@@ -23,4 +23,16 @@ return [
     */
     'setup_admin_token' => env('SETUP_ADMIN_TOKEN', ''),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Default shop for new users (optional)
+    |--------------------------------------------------------------------------
+    |
+    | If set to a valid shops.id, every new registration joins that shop unless
+    | they enter a different Team code on the register form. Use this when one
+    | Snack Inn has several staff accounts sharing the same products and orders.
+    |
+    */
+    'default_shop_id' => env('SNACK_INN_DEFAULT_SHOP_ID'),
+
 ];

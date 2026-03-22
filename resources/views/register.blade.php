@@ -163,6 +163,28 @@
                 </div>
 
                 <div class="space-y-2">
+                    <label class="block text-sm font-bold text-on-surface ml-1">Team code <span class="text-on-surface-variant font-medium">(optional)</span></label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl">groups</span>
+                        <input
+                            name="team_code"
+                            type="text"
+                            value="{{ old('team_code') }}"
+                            placeholder="Same Snack Inn as your manager"
+                            autocomplete="off"
+                            class="w-full pl-12 pr-4 py-4 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary text-on-surface placeholder:text-outline transition-all uppercase tracking-wider font-mono"
+                        />
+                    </div>
+                    <p class="text-xs text-on-surface-variant ml-1 leading-relaxed">
+                        Enter the code from the <strong class="text-on-surface">Dashboard</strong> so this account shares the same products, queue, and history.
+                        Leave empty if your site uses a default shop.
+                    </p>
+                    @error('team_code')
+                        <p class="text-sm font-bold text-error ml-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="space-y-2">
                     <label class="block text-sm font-bold text-on-surface ml-1">Password</label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl">lock</span>

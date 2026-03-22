@@ -157,6 +157,20 @@
             </a>
         </div>
 
+        @if (! empty($shop))
+            <div class="mb-8 rounded-2xl border border-pink-100 bg-gradient-to-r from-pink-50/90 to-secondary-container/30 px-4 py-4 sm:px-5 sm:py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="min-w-0">
+                    <p class="text-xs font-black uppercase tracking-wider text-pink-600">Shared workspace</p>
+                    <p class="text-base font-black text-on-background mt-0.5 truncate">{{ $shop->name }}</p>
+                    <p class="text-sm text-on-surface-variant mt-1">New staff accounts can enter this team code when they register to use the same menu, order queue, and reports.</p>
+                </div>
+                <div class="shrink-0 flex flex-col items-stretch sm:items-end gap-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Team code</span>
+                    <code class="font-mono text-xl sm:text-2xl font-black tracking-[0.2em] bg-white px-4 py-2 rounded-xl border-2 border-pink-200 text-pink-600 shadow-sm select-all">{{ $shop->invite_code }}</code>
+                </div>
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="bg-white p-6 rounded-lg shadow-[0_4px_16px_rgba(224,64,160,0.08)] border border-pink-50 bouncy-hover">
                 <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center mb-4">

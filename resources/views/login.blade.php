@@ -117,6 +117,9 @@
             </div>
             <h1 class="text-4xl font-black tracking-tight text-primary mb-2">AKEIRA'S SNACK INN</h1>
             <p class="text-on-surface-variant font-medium">Your favourite snacks, all in one place</p>
+            <p class="mt-3">
+                <a href="{{ route('welcome') }}" class="text-sm font-bold text-secondary hover:text-primary transition-colors">See what the system does →</a>
+            </p>
         </div>
 
         {{-- Login Card --}}

@@ -9,6 +9,7 @@ use App\Http\Controllers\OrderQueueController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SetupAdminController;
+use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,8 +18,14 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware('throttle:10,1')->get('/setup-first-admin', SetupAdminController::class)->name('setup.first-admin');
 
+/** Site home: welcome for guests; logged-in users go to the dashboard. */
+Route::get('/', WelcomeController::class)->name('welcome');
+
+/** Old URL from docs/bookmarks → home */
+Route::redirect('/welcome', '/', 301);
+
 Route::middleware('guest')->group(function () {
-    Route::get('/', [AuthController::class, 'loginForm'])->name('login');
+    Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 
     // Registration (open /register or link from login). Remove these lines to disable public sign-up.
@@ -30,7 +37,9 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
 
+Route::middleware(['auth', 'shop'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');

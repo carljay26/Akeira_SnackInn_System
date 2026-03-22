@@ -21,7 +21,7 @@ class SendSnackInnDigestNotifications extends Command
     {
         $tz = 'Asia/Manila';
 
-        foreach (User::query()->cursor() as $user) {
+        foreach (User::query()->whereNotNull('shop_id')->cursor() as $user) {
             $this->sendHistorySalesDigest($user, $tz);
             $this->sendTopSellingDigest($user, $tz);
             $this->sendLineItemsDigest($user, $tz);
@@ -51,7 +51,7 @@ class SendSnackInnDigestNotifications extends Command
         [$start, $end] = $this->todayRangeUtc($tz);
 
         return Order::query()
-            ->where('user_id', $user->id)
+            ->where('shop_id', $user->shop_id)
             ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('ordered_at', [$start, $end])
                     ->orWhereBetween('created_at', [$start, $end]);
@@ -69,7 +69,7 @@ class SendSnackInnDigestNotifications extends Command
         [$start, $end] = $this->todayRangeUtc($tz);
 
         $total = (float) Order::query()
-            ->where('user_id', $user->id)
+            ->where('shop_id', $user->shop_id)
             ->where('status', 'completed')
             ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('ordered_at', [$start, $end])

@@ -17,7 +17,21 @@ class ProductController extends Controller
         $search = $request->string('search')->toString();
         $lowStockThreshold = (int) config('snack_inn.low_stock_threshold', 10);
 
+        $shopId = $request->user()->shop_id;
+
+        $shopProductQuery = Product::query()->where('shop_id', $shopId);
+
+        $totalProducts = (clone $shopProductQuery)->count();
+        $lowStockCount = (clone $shopProductQuery)
+            ->where('stock', '<=', $lowStockThreshold)
+            ->count();
+        $categoryCount = (int) Product::query()
+            ->where('shop_id', $shopId)
+            ->selectRaw('COUNT(DISTINCT category) as aggregate')
+            ->value('aggregate');
+
         $products = Product::query()
+            ->where('shop_id', $shopId)
             ->when($search, function ($query, $searchTerm) {
                 $query->where('name', 'like', "%{$searchTerm}%")
                     ->orWhere('category', 'like', "%{$searchTerm}%");
@@ -26,7 +40,17 @@ class ProductController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        return view('product', compact('products', 'search', 'lowStockThreshold'));
+        $maxStock = max((int) (clone $shopProductQuery)->max('stock'), 1);
+
+        return view('product', compact(
+            'products',
+            'search',
+            'lowStockThreshold',
+            'totalProducts',
+            'lowStockCount',
+            'categoryCount',
+            'maxStock'
+        ));
     }
 
     public function store(Request $request): RedirectResponse
@@ -37,7 +61,9 @@ class ProductController extends Controller
             $validated['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        Product::create($validated);
+        Product::create(array_merge($validated, [
+            'shop_id' => $request->user()->shop_id,
+        ]));
 
         ActivityLog::create([
             'user_id' => $request->user()?->id,
@@ -50,6 +76,10 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product): RedirectResponse
     {
+        if ($product->shop_id !== $request->user()->shop_id) {
+            abort(404);
+        }
+
         $validated = $this->validateProduct($request, true);
 
         if ($request->hasFile('image')) {
@@ -77,6 +107,10 @@ class ProductController extends Controller
 
     public function destroy(Request $request, Product $product): RedirectResponse
     {
+        if ($product->shop_id !== $request->user()->shop_id) {
+            abort(404);
+        }
+
         $name = $product->name;
 
         ActivityLog::create([

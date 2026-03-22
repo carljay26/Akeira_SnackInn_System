@@ -12,6 +12,8 @@ class ReportsController extends Controller
 {
     public function index(Request $request): View
     {
+        $shopId = $request->user()->shop_id;
+
         $selectedMonth = (int) $request->integer('month');
         if ($selectedMonth < 1 || $selectedMonth > 12) {
             $selectedMonth = 0;
@@ -25,16 +27,17 @@ class ReportsController extends Controller
             return $query;
         };
 
-        $totalRevenue = $applyMonthFilter(Order::where('status', 'completed'))->sum('total');
-        $avgOrderValue = (float) $applyMonthFilter(Order::query())->avg('total');
-        $newCustomers = $applyMonthFilter(Order::query())->count();
+        $totalRevenue = $applyMonthFilter(Order::where('shop_id', $shopId)->where('status', 'completed'))->sum('total');
+        $avgOrderValue = (float) $applyMonthFilter(Order::query()->where('shop_id', $shopId))->avg('total');
+        $newCustomers = $applyMonthFilter(Order::query()->where('shop_id', $shopId))->count();
 
         $totalUnits = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.shop_id', $shopId)
             ->when($selectedMonth > 0, fn ($q) => $q->whereMonth('orders.created_at', $selectedMonth))
             ->sum('order_items.quantity');
 
-        $monthlySales = $applyMonthFilter(Order::select(
+        $monthlySales = $applyMonthFilter(Order::query()->where('shop_id', $shopId)->select(
             DB::raw('DATE_FORMAT(created_at, "%b") as month'),
             DB::raw('SUM(total) as amount')
         ))
@@ -52,6 +55,7 @@ class ReportsController extends Controller
             )
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.shop_id', $shopId)
             ->when($selectedMonth > 0, fn ($q) => $q->whereMonth('orders.created_at', $selectedMonth))
             ->groupBy('products.id', 'products.name', 'products.category')
             ->orderByDesc('units_sold');

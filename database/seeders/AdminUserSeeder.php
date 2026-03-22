@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Shop;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -29,11 +30,19 @@ class AdminUserSeeder extends Seeder
             $password = 'password123';
         }
 
+        $shop = Shop::query()->first();
+        if ($shop === null) {
+            $shop = Shop::query()->create([
+                'name' => "Akeira's Snack Inn",
+            ]);
+        }
+
         User::updateOrCreate(
             ['email' => $email],
             [
                 'name' => $name,
                 'password' => Hash::make($password),
+                'shop_id' => $shop->id,
             ]
         );
 

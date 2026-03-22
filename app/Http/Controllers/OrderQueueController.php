@@ -9,20 +9,21 @@ use App\Services\SnackInnNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class OrderQueueController extends Controller
 {
     public function index(Request $request): View
     {
-        $userId = $request->user()->id;
+        $shopId = $request->user()->shop_id;
         $search = $request->string('search')->toString();
 
-        $pendingInQueue = Order::where('user_id', $userId)->where('status', 'pending')->count();
-        $pendingValue = (float) Order::where('user_id', $userId)->where('status', 'pending')->sum('total');
+        $pendingInQueue = Order::where('shop_id', $shopId)->where('status', 'pending')->count();
+        $pendingValue = (float) Order::where('shop_id', $shopId)->where('status', 'pending')->sum('total');
 
         $orders = Order::with(['items.product'])
-            ->where('user_id', $userId)
+            ->where('shop_id', $shopId)
             ->where('status', 'pending')
             ->when($search, fn ($q) => $q->where('reference', 'like', "%{$search}%"))
             ->latest()
@@ -31,7 +32,7 @@ class OrderQueueController extends Controller
 
         $recentCompletedOrders = Order::query()
             ->with(['items.product'])
-            ->where('user_id', $userId)
+            ->where('shop_id', $shopId)
             ->where('status', 'completed')
             ->latest('completed_at')
             ->limit(5)
@@ -39,13 +40,14 @@ class OrderQueueController extends Controller
 
         $recentRemovedOrders = Order::query()
             ->with(['items.product'])
-            ->where('user_id', $userId)
+            ->where('shop_id', $shopId)
             ->where('status', 'removed')
             ->latest('removed_at')
             ->limit(5)
             ->get();
 
         $catalogProducts = Product::query()
+            ->where('shop_id', $shopId)
             ->where('is_active', true)
             ->where('stock', '>', 0)
             ->orderBy('name')
@@ -63,7 +65,7 @@ class OrderQueueController extends Controller
 
     public function finishOrder(Request $request, Order $order): RedirectResponse
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->shop_id !== $request->user()->shop_id) {
             abort(403);
         }
 
@@ -106,7 +108,7 @@ class OrderQueueController extends Controller
 
     public function removeOrder(Request $request, Order $order): RedirectResponse
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->shop_id !== $request->user()->shop_id) {
             abort(403);
         }
 
@@ -124,7 +126,7 @@ class OrderQueueController extends Controller
 
     public function restoreOrder(Request $request, Order $order): RedirectResponse
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->shop_id !== $request->user()->shop_id) {
             abort(403);
         }
 
@@ -150,7 +152,7 @@ class OrderQueueController extends Controller
 
     public function addOrderItem(Request $request, Order $order): RedirectResponse
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->shop_id !== $request->user()->shop_id) {
             abort(403);
         }
 
@@ -161,7 +163,11 @@ class OrderQueueController extends Controller
         }
 
         $validated = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'product_id' => [
+                'required',
+                'integer',
+                Rule::exists('products', 'id')->where(fn ($q) => $q->where('shop_id', $order->shop_id)),
+            ],
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
@@ -224,7 +230,7 @@ class OrderQueueController extends Controller
 
     public function updateOrderItem(Request $request, Order $order, OrderItem $orderItem): RedirectResponse
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->shop_id !== $request->user()->shop_id) {
             abort(403);
         }
 

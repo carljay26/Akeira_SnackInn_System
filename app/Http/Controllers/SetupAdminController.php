@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Shop;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,11 +35,17 @@ class SetupAdminController extends Controller
             $password = 'password123';
         }
 
+        $shopId = config('snack_inn.default_shop_id');
+        $shop = $shopId
+            ? Shop::query()->find((int) $shopId)
+            : Shop::query()->first();
+
         User::updateOrCreate(
             ['email' => $email],
             [
                 'name' => $name,
                 'password' => Hash::make($password),
+                'shop_id' => $shop?->id,
             ]
         );
 

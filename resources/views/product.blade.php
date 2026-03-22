@@ -181,14 +181,7 @@
             'wrapperClass' => 'mb-6 flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-100 text-emerald-900 font-bold text-sm border border-emerald-200/90 shadow-sm',
         ])
 
-        @php
-            $totalProducts  = \App\Models\Product::count();
-            $lowStockCount  = \App\Models\Product::where('stock', '<=', $lowStockThreshold)->count();
-            $categoryCount  = \App\Models\Product::distinct('category')->count('category');
-            $maxStock       = max($products->max('stock') ?: 1, 1);
-        @endphp
-
-        {{-- Stats Bar --}}
+        {{-- Stats Bar (totals scoped to current shop in ProductController) --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-5">
             <div class="bg-white p-4 sm:p-5 rounded-lg shadow-[0_4px_16px_rgba(224,64,160,0.08)] border border-pink-50 flex items-center gap-3 sm:gap-4">
                 <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary">

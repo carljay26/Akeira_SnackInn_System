@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Shop;
 use App\Models\User;
 use App\Services\SnackInnNotifier;
 use Illuminate\Http\RedirectResponse;
@@ -28,12 +29,23 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255', 'unique:users,name'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
+            'team_code' => ['nullable', 'string', 'max:32'],
         ]);
+
+        $teamCode = $validated['team_code'] ?? null;
+        if ($teamCode !== null && trim($teamCode) !== '' && Shop::findByTeamCode($teamCode) === null) {
+            return back()
+                ->withErrors(['team_code' => 'That team code was not found. Ask a manager for the code on the dashboard, or leave blank if your server uses a default shop.'])
+                ->withInput($request->only('name', 'email', 'team_code'));
+        }
+
+        $shop = Shop::assignForNewRegistration($teamCode, $validated['name']);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => $validated['password'],
+            'shop_id' => $shop->id,
         ]);
 
         Auth::login($user);
