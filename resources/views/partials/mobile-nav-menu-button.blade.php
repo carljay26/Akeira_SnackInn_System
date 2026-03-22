@@ -1,6 +1,7 @@
+{{-- Hidden when persistent sidebar is shown (xl+). Below xl, drawer is the main nav. --}}
 {{-- Fixed-size wrapper so flex layout cannot collapse the control to 0 width --}}
 <div
-    class="shrink-0 flex items-center justify-center"
+    class="shrink-0 flex items-center justify-center xl:hidden"
     style="width: 2.75rem; height: 2.75rem; min-width: 2.75rem; min-height: 2.75rem; flex: 0 0 2.75rem;"
 >
     <button

@@ -109,7 +109,7 @@
 <body class="bg-background text-on-background min-h-screen">
 
 <header class="fixed top-0 w-full z-50 border-b border-pink-100 bg-white/80 backdrop-blur-md shadow-[0_4px_16px_rgba(224,64,160,0.15)] flex justify-between items-center gap-2 px-4 sm:px-6 h-16">
-    <div class="grid grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1">
+    <div class="grid grid-cols-[2.75rem_minmax(0,1fr)] xl:grid-cols-1 items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1">
         @include('partials.mobile-nav-menu-button')
         <div class="flex items-center gap-2 sm:gap-3 min-w-0">
             @include('partials.brand-logo', ['class' => 'h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full object-cover border-2 border-pink-100 bg-white shadow-sm'])
@@ -188,6 +188,20 @@
             <div class="mb-6 px-4 py-3 rounded-2xl bg-error-container text-on-error-container text-sm font-bold flex items-center gap-2">
                 <span class="material-symbols-outlined text-base">error</span>
                 {{ $errors->first('restore') }}
+            </div>
+        @endif
+
+        @if ($errors->has('quantity'))
+            <div class="mb-6 px-4 py-3 rounded-2xl bg-error-container text-on-error-container text-sm font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-base">error</span>
+                {{ $errors->first('quantity') }}
+            </div>
+        @endif
+
+        @if ($errors->has('add_item'))
+            <div class="mb-6 px-4 py-3 rounded-2xl bg-error-container text-on-error-container text-sm font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-base">error</span>
+                {{ $errors->first('add_item') }}
             </div>
         @endif
 
@@ -272,9 +286,21 @@
 
                     <div id="queue-details-{{ $order->id }}" class="order-dropdown border-t border-pink-50">
                         <div class="p-4 md:p-6 bg-pink-50/20">
-                            <div class="flex flex-wrap items-center gap-3 mb-4">
-                                <span class="text-sm font-black text-on-surface">Reference: {{ $order->reference }}</span>
-                                <span class="px-3 py-1 rounded-full text-xs font-bold {{ $statusStyle }}">Pending</span>
+                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 gap-y-2">
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <span class="text-sm font-black text-on-surface">Reference: {{ $order->reference }}</span>
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold {{ $statusStyle }}">Pending</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onclick="queueOpenAddItemModal(this)"
+                                    data-queue-add-url="{{ route('order-queue.add-item', $order) }}"
+                                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border-2 border-pink-200 text-pink-600 text-xs font-black shadow-sm hover:bg-pink-50 hover:border-pink-300 transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    @if ($catalogProducts->isEmpty()) disabled title="No products in stock" @endif
+                                >
+                                    <span class="material-symbols-outlined text-base">add_circle</span>
+                                    Add another item
+                                </button>
                             </div>
 
                             <div class="space-y-3">
@@ -282,20 +308,84 @@
                                     @php
                                         $lineUnitLabel = trim((string) (optional($item->product)->unit ?? 'pcs'));
                                         $lineUnitLabel = preg_replace('/^\d+\s*/', '', $lineUnitLabel) ?: 'pcs';
+                                        $stockMax = $item->product ? max(0, (int) $item->product->stock) : 0;
+                                        $canEditLine = $item->product && $stockMax > 0;
                                     @endphp
-                                    <div class="flex items-center gap-4 p-3 rounded-2xl bg-white border border-pink-50">
-                                        @if ($item->product?->image_path)
-                                            <img src="{{ asset('storage/' . $item->product->image_path) }}" alt="{{ $item->product->name }}" class="w-12 h-12 rounded-lg object-cover shrink-0"/>
-                                        @else
-                                            <div class="w-12 h-12 rounded-lg overflow-hidden border border-pink-100 bg-white shrink-0 shadow-sm">
-                                                <img src="{{ asset('images/logo.jpg') }}" alt="" class="w-full h-full object-cover"/>
+                                    <div class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-2xl bg-white border border-pink-50" data-queue-line="{{ $item->id }}">
+                                        <div class="flex items-center gap-4 flex-1 min-w-0">
+                                            @if ($item->product?->image_path)
+                                                <img src="{{ asset('storage/' . $item->product->image_path) }}" alt="{{ $item->product->name }}" class="w-12 h-12 rounded-lg object-cover shrink-0"/>
+                                            @else
+                                                <div class="w-12 h-12 rounded-lg overflow-hidden border border-pink-100 bg-white shrink-0 shadow-sm">
+                                                    <img src="{{ asset('images/logo.jpg') }}" alt="" class="w-full h-full object-cover"/>
+                                                </div>
+                                            @endif
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-bold text-on-surface">{{ optional($item->product)->name ?? 'Deleted Product' }}</p>
+                                                <p id="qi-meta-{{ $item->id }}" class="text-xs text-zinc-400">{{ (int) $item->quantity }} {{ $lineUnitLabel }} × PHP {{ number_format((float) $item->unit_price, 2) }}</p>
+                                                @if ($canEditLine)
+                                                    <form
+                                                        id="qi-form-{{ $item->id }}"
+                                                        method="POST"
+                                                        action="{{ route('order-queue.update-item', [$order, $item]) }}"
+                                                        class="hidden mt-2 flex flex-wrap items-center gap-2"
+                                                    >
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <div class="inline-flex items-center gap-0.5 rounded-full border border-pink-200 bg-pink-50/80 px-1 py-0.5">
+                                                            <button
+                                                                type="button"
+                                                                class="w-8 h-8 flex items-center justify-center rounded-full text-pink-700 hover:bg-pink-100 font-black text-lg leading-none"
+                                                                onclick="queueAdjustQty({{ $item->id }}, -1)"
+                                                                aria-label="Decrease quantity"
+                                                            >−</button>
+                                                            <input
+                                                                type="number"
+                                                                name="quantity"
+                                                                id="qi-qty-{{ $item->id }}"
+                                                                value="{{ (int) $item->quantity }}"
+                                                                min="1"
+                                                                max="{{ $stockMax }}"
+                                                                data-original="{{ (int) $item->quantity }}"
+                                                                data-stock-max="{{ $stockMax }}"
+                                                                class="w-12 text-center bg-transparent font-black text-sm text-on-surface border-0 p-0 focus:ring-0"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                class="w-8 h-8 flex items-center justify-center rounded-full text-pink-700 hover:bg-pink-100 font-black text-lg leading-none"
+                                                                onclick="queueAdjustQty({{ $item->id }}, 1)"
+                                                                aria-label="Increase quantity"
+                                                            >+</button>
+                                                        </div>
+                                                        <button type="submit" class="px-3 py-1.5 rounded-full bg-primary text-white text-xs font-black shadow-sm hover:opacity-95 transition-opacity">
+                                                            Update
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onclick="queueCancelEdit({{ $item->id }})"
+                                                            class="px-3 py-1.5 rounded-full border border-zinc-200 bg-white text-zinc-700 text-xs font-bold hover:bg-zinc-50"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </form>
+                                                @elseif ($item->product && $stockMax === 0)
+                                                    <p class="text-[11px] text-amber-700 font-bold mt-1">Out of stock — cannot edit quantity.</p>
+                                                @endif
                                             </div>
-                                        @endif
-                                        <div class="flex-1">
-                                            <p class="text-sm font-bold text-on-surface">{{ optional($item->product)->name ?? 'Deleted Product' }}</p>
-                                            <p class="text-xs text-zinc-400">{{ (int) $item->quantity }} {{ $lineUnitLabel }} × PHP {{ number_format((float) $item->unit_price, 2) }}</p>
                                         </div>
-                                        <span class="text-sm font-black text-pink-600 shrink-0">PHP {{ number_format((float) $item->line_total, 2) }}</span>
+                                        <div class="flex items-center justify-between sm:flex-col sm:items-end gap-2 shrink-0 sm:min-w-[7rem]">
+                                            <span class="text-sm font-black text-pink-600">PHP {{ number_format((float) $item->line_total, 2) }}</span>
+                                            @if ($canEditLine)
+                                                <button
+                                                    type="button"
+                                                    id="qi-edit-btn-{{ $item->id }}"
+                                                    onclick="queueStartEdit({{ $item->id }})"
+                                                    class="text-xs font-black text-pink-600 px-3 py-1 rounded-full bg-pink-50 hover:bg-pink-100 border border-pink-100 transition-colors"
+                                                >
+                                                    Edit
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
                                 @empty
                                     <p class="text-sm text-zinc-400 py-2">No items found.</p>
@@ -486,9 +576,107 @@
     </div>
 </div>
 
+<div id="add-item-modal" class="fixed inset-0 z-[71] hidden items-center justify-center bg-black/40 px-4">
+    <div class="w-full max-w-md rounded-3xl bg-white border border-pink-100 shadow-[0_12px_36px_rgba(0,0,0,0.15)] p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-start gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined">add_shopping_cart</span>
+            </div>
+            <div>
+                <h3 class="text-lg font-black text-on-surface">Add another item</h3>
+                <p class="text-sm text-on-surface-variant mt-1">Choose a product and quantity. If this order already has that product, quantities are combined (within stock).</p>
+            </div>
+        </div>
+
+        @if ($catalogProducts->isEmpty())
+            <p class="text-sm text-zinc-500 py-4">No products are available in stock right now.</p>
+            <div class="flex justify-end mt-4">
+                <button type="button" onclick="queueCloseAddItemModal()" class="px-4 py-2 rounded-full border border-pink-100 text-zinc-600 font-bold text-sm hover:bg-pink-50 transition-colors">
+                    Close
+                </button>
+            </div>
+        @else
+            <form id="queue-add-item-form" method="POST" action="" class="space-y-4">
+                @csrf
+                <div>
+                    <label for="queue-add-item-product" class="block text-xs font-black text-on-surface-variant uppercase tracking-wide mb-1.5">Product</label>
+                    <select
+                        name="product_id"
+                        id="queue-add-item-product"
+                        required
+                        class="w-full rounded-2xl border-2 border-pink-100 bg-white px-4 py-3 text-sm font-bold text-on-surface focus:border-pink-400 focus:outline-none"
+                        onchange="queueSyncAddItemQtyMax()"
+                    >
+                        @foreach ($catalogProducts as $p)
+                            <option value="{{ $p->id }}" data-stock="{{ (int) $p->stock }}">
+                                {{ $p->name }} — PHP {{ number_format((float) $p->price, 2) }} / {{ $p->unit }} ({{ (int) $p->stock }} in stock)
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="queue-add-item-qty" class="block text-xs font-black text-on-surface-variant uppercase tracking-wide mb-1.5">Quantity</label>
+                    <input
+                        type="number"
+                        name="quantity"
+                        id="queue-add-item-qty"
+                        min="1"
+                        value="1"
+                        required
+                        class="w-full rounded-2xl border-2 border-pink-100 bg-white px-4 py-3 text-sm font-bold text-on-surface focus:border-pink-400 focus:outline-none"
+                    />
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="queueCloseAddItemModal()" class="px-4 py-2 rounded-full border border-pink-100 text-zinc-600 font-bold text-sm hover:bg-pink-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 rounded-full bg-pink-500 text-white font-black text-sm shadow-[0_4px_12px_rgba(236,72,153,0.25)] hover:bg-pink-600 transition-colors">
+                        Add to order
+                    </button>
+                </div>
+            </form>
+        @endif
+    </div>
+</div>
+
 <script>
     let pendingRemoveForm = null;
     let isQueueSidePanelHidden = false;
+
+    function queueOpenAddItemModal(btn) {
+        @if ($catalogProducts->isEmpty())
+            return;
+        @else
+        var url = btn.getAttribute('data-queue-add-url');
+        var form = document.getElementById('queue-add-item-form');
+        if (!form || !url) return;
+        form.setAttribute('action', url);
+        queueSyncAddItemQtyMax();
+        var modal = document.getElementById('add-item-modal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        @endif
+    }
+
+    function queueCloseAddItemModal() {
+        var modal = document.getElementById('add-item-modal');
+        if (!modal) return;
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }
+
+    function queueSyncAddItemQtyMax() {
+        var sel = document.getElementById('queue-add-item-product');
+        var qty = document.getElementById('queue-add-item-qty');
+        if (!sel || !qty) return;
+        var opt = sel.options[sel.selectedIndex];
+        var stock = opt ? parseInt(opt.getAttribute('data-stock') || '1', 10) : 1;
+        qty.setAttribute('max', stock);
+        var v = parseInt(String(qty.value || '1'), 10);
+        if (isNaN(v) || v < 1) v = 1;
+        if (v > stock) qty.value = stock;
+    }
 
     function openRemoveModal(button) {
         pendingRemoveForm = button.closest('form');
@@ -514,6 +702,11 @@
 
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
+            var addModal = document.getElementById('add-item-modal');
+            if (addModal && !addModal.classList.contains('hidden')) {
+                queueCloseAddItemModal();
+                return;
+            }
             closeRemoveModal();
         }
     });
@@ -523,6 +716,17 @@
             closeRemoveModal();
         }
     });
+
+    (function () {
+        var addModal = document.getElementById('add-item-modal');
+        if (addModal) {
+            addModal.addEventListener('click', function (event) {
+                if (event.target.id === 'add-item-modal') {
+                    queueCloseAddItemModal();
+                }
+            });
+        }
+    })();
 
     function toggleMiniDetails(id, button) {
         const panel = document.getElementById(id);
@@ -563,6 +767,49 @@
             panel.style.maxHeight = panel.scrollHeight + 'px';
             button.textContent = 'Hide Details';
         }
+    }
+
+    function queueCancelEdit(id) {
+        var form = document.getElementById('qi-form-' + id);
+        var meta = document.getElementById('qi-meta-' + id);
+        var btn = document.getElementById('qi-edit-btn-' + id);
+        var input = document.getElementById('qi-qty-' + id);
+        if (!form) return;
+        form.classList.add('hidden');
+        if (meta) meta.classList.remove('hidden');
+        if (btn) btn.classList.remove('hidden');
+        if (input) {
+            var orig = input.getAttribute('data-original');
+            if (orig !== null) input.value = orig;
+        }
+    }
+
+    function queueStartEdit(id) {
+        document.querySelectorAll('[id^="qi-form-"]').forEach(function (f) {
+            var oid = f.id.replace('qi-form-', '');
+            if (oid && f.id !== 'qi-form-' + id) {
+                queueCancelEdit(oid);
+            }
+        });
+        var form = document.getElementById('qi-form-' + id);
+        var meta = document.getElementById('qi-meta-' + id);
+        var btn = document.getElementById('qi-edit-btn-' + id);
+        if (!form) return;
+        form.classList.remove('hidden');
+        if (meta) meta.classList.add('hidden');
+        if (btn) btn.classList.add('hidden');
+    }
+
+    function queueAdjustQty(id, delta) {
+        var input = document.getElementById('qi-qty-' + id);
+        if (!input) return;
+        var max = parseInt(input.getAttribute('data-stock-max') || '999', 10);
+        var min = 1;
+        var v = parseInt(String(input.value || '1'), 10) + delta;
+        if (isNaN(v)) v = min;
+        if (v < min) v = min;
+        if (v > max) v = max;
+        input.value = v;
     }
 </script>
 

@@ -87,7 +87,7 @@
 <body class="bg-background text-on-background min-h-screen">
 
 <header class="fixed top-0 w-full z-50 border-b border-pink-100 bg-white/80 backdrop-blur-md shadow-[0_4px_16px_rgba(224,64,160,0.15)] flex justify-between items-center gap-2 px-4 sm:px-6 h-16">
-    <div class="grid grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1">
+    <div class="grid grid-cols-[2.75rem_minmax(0,1fr)] xl:grid-cols-1 items-center gap-2 sm:gap-3 flex-1 min-w-0 pr-1">
         @include('partials.mobile-nav-menu-button')
         <div class="flex items-center gap-2 sm:gap-3 min-w-0">
             @include('partials.brand-logo', ['class' => 'h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full object-cover border-2 border-pink-100 bg-white shadow-sm'])

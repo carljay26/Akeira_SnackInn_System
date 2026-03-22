@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/order-queue', [OrderQueueController::class, 'index'])->name('order-queue.index');
     Route::post('/order-queue/{order}/finish', [OrderQueueController::class, 'finishOrder'])->name('order-queue.finish');
+    Route::post('/order-queue/{order}/items', [OrderQueueController::class, 'addOrderItem'])->name('order-queue.add-item');
+    Route::patch('/order-queue/{order}/items/{orderItem}', [OrderQueueController::class, 'updateOrderItem'])->name('order-queue.update-item');
     Route::delete('/order-queue/{order}', [OrderQueueController::class, 'removeOrder'])->name('order-queue.remove');
     Route::post('/order-queue/{order}/restore', [OrderQueueController::class, 'restoreOrder'])->name('order-queue.restore');
 
